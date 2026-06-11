@@ -1,0 +1,252 @@
+[
+  {
+    "fingerprint_id": "SEED_REACT_UE_DEPS_001",
+    "category": "STATE_SYNC",
+    "pattern_name": "MISSING_USE_EFFECT_DEPENDENCY",
+    "description": "useEffect使用了外部变量但依赖数组未包含该变量",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "useEffect体内引用了外部变量但依赖数组为空或遗漏",
+      "example_trigger": "useEffect(() => { fetch(userId) }, [])  // userId变化不会重新fetch",
+      "example_fix": "将userId加入依赖数组"
+    },
+    "severity": "SEVERE",
+    "confidence": 0.85,
+    "fix_template": "将useEffect中使用的所有外部变量加入依赖数组",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
+  },
+  {
+    "fingerprint_id": "SEED_REACT_KEY_001",
+    "category": "INCOMPLETE",
+    "pattern_name": "MISSING_LIST_KEY",
+    "description": ".map()渲染列表缺少key属性，导致React渲染性能下降和状态错乱",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "array.map(item => <Component />) 无key属性",
+      "example_trigger": "{items.map(i => <li>{i.name}</li>)}  // 缺key",
+      "example_fix": "添加key={i.id}"
+    },
+    "severity": "SEVERE",
+    "confidence": 0.85,
+    "fix_template": "为每个列表项添加唯一的key属性",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
+  },
+  {
+    "fingerprint_id": "SEED_REACT_KEY_002",
+    "category": "INCOMPLETE",
+    "pattern_name": "INDEX_AS_KEY_ANTIPATTERN",
+    "description": "使用数组索引作为key，列表重排时导致渲染错误",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "key={index} 或 key={i} 使用循环索引为key",
+      "example_trigger": "items.map((item, index) => <li key={index}>...)",
+      "example_fix": "使用item.id或生成唯一ID"
+    },
+    "severity": "MODERATE",
+    "confidence": 0.7,
+    "fix_template": "使用数据中的唯一标识符而非索引作为key",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
+  },
+  {
+    "fingerprint_id": "SEED_REACT_CLEANUP_001",
+    "category": "INCOMPLETE",
+    "pattern_name": "MISSING_USE_EFFECT_CLEANUP",
+    "description": "useEffect中设置了定时器/订阅/事件但未返回cleanup函数",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "useEffect中使用setInterval/addEventListener但无return cleanup",
+      "example_trigger": "useEffect(() => { setInterval(tick, 1000) }, [])  // 无clearInterval",
+      "example_fix": "return () => clearInterval(id)"
+    },
+    "severity": "SEVERE",
+    "confidence": 0.85,
+    "fix_template": "在useEffect中返回cleanup函数清理副作用",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
+  },
+  {
+    "fingerprint_id": "SEED_REACT_STATE_001",
+    "category": "STATE_SYNC",
+    "pattern_name": "SETSTATE_IN_RENDER",
+    "description": "在渲染期间调用setState，导致无限重渲染循环",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "组件函数体中直接调用setState（非事件/effect中）",
+      "example_trigger": "function Comp() { setCount(count+1); return <div/> }",
+      "example_fix": "将状态更新移到useEffect或事件处理器中"
+    },
+    "severity": "FATAL",
+    "confidence": 0.9,
+    "fix_template": "将setState调用移到useEffect或事件处理器中",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
+  },
+  {
+    "fingerprint_id": "SEED_REACT_MEMO_001",
+    "category": "INCOMPLETE",
+    "pattern_name": "UNSTABLE_OBJECT_IN_DEPS",
+    "description": "useEffect/useMemo依赖数组中使用内联对象/数组，每次渲染都是新引用",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "useEffect(()=>{}, [{...}]) 依赖包含对象字面量",
+      "example_trigger": "useEffect(() => {}, [{ page, size }])  // 每次渲染新对象",
+      "example_fix": "使用useMemo包裹对象或拆分为原始值依赖"
+    },
+    "severity": "MODERATE",
+    "confidence": 0.75,
+    "fix_template": "使用useMemo稳定对象引用或拆分为原始值",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
+  },
+  {
+    "fingerprint_id": "SEED_REACT_HOOKS_001",
+    "category": "VAR_SCOPE",
+    "pattern_name": "CONDITIONAL_HOOK_CALL",
+    "description": "Hook在条件语句/循环中调用，违反Hook规则",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "if/for/while块中调用useState/useEffect等Hook",
+      "example_trigger": "if (loading) { useState(false) }  // Hook不能在条件中调用",
+      "example_fix": "将Hook移到组件顶层，条件逻辑放在Hook内部"
+    },
+    "severity": "FATAL",
+    "confidence": 0.9,
+    "fix_template": "始终在组件顶层调用Hook",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
+  },
+  {
+    "fingerprint_id": "SEED_REACT_PROPS_001",
+    "category": "API_MISMATCH",
+    "pattern_name": "MISSING_REQUIRED_PROP",
+    "description": "组件使用了prop但未定义或未提供默认值",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "组件中使用props.xxx但PropTypes未定义或调用时未传入",
+      "example_trigger": "<UserCard /> 缺少必需的user prop",
+      "example_fix": "定义PropTypes并确保调用时传入必需prop"
+    },
+    "severity": "SEVERE",
+    "confidence": 0.8,
+    "fix_template": "检查PropTypes定义并确保传入所有必需prop",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
+  },
+  {
+    "fingerprint_id": "SEED_REACT_RERENDER_001",
+    "category": "STATE_SYNC",
+    "pattern_name": "UNCONTROLLED_TO_CONTROLLED_SWITCH",
+    "description": "input组件的value从undefined变为定义值，控制模式切换警告",
+    "abstract_signature": {
+      "pattern_type": "semantic_pattern",
+      "trigger_condition": "input的value/checked从undefined变为具体值",
+      "example_trigger": "<input value={val || undefined}>  // 在受控/非受控间切换",
+      "example_fix": "始终初始化为空字符串或使用defaultValue"
+    },
+    "severity": "MODERATE",
+    "confidence": 0.7,
+    "fix_template": "保持组件始终为受控或非受控模式",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
+  },
+  {
+    "fingerprint_id": "SEED_REACT_CONTEXT_001",
+    "category": "VAR_SCOPE",
+    "pattern_name": "CONTEXT_PROVIDER_MISSING",
+    "description": "组件使用useContext但未在Provider包裹内",
+    "abstract_signature": {
+      "pattern_type": "semantic_pattern",
+      "trigger_condition": "useContext(MyContext)但组件未在<MyContext.Provider>子树中",
+      "example_trigger": "const theme = useContext(ThemeContext)  // 可能为undefined",
+      "example_fix": "确保组件在Provider内部，提供默认值"
+    },
+    "severity": "SEVERE",
+    "confidence": 0.8,
+    "fix_template": "将组件包裹在Context.Provider中",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
+  },
+  {
+    "fingerprint_id": "REACT-UNMOUNT-001",
+    "category": "unmounted_state_update",
+    "pattern_name": "State Update on Unmounted Component",
+    "description": "setState called after component unmount",
+    "abstract_signature": "fetch().then(data => setData(data))  // component may be unmounted",
+    "severity": "medium",
+    "confidence": 0.78,
+    "fix_template": "Use AbortController or cleanup flag in useEffect return",
+    "ai_blindspot": "context_lost",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "javascript"
+  },
+  {
+    "fingerprint_id": "REACT-RERENDER-001",
+    "category": "unnecessary_rerender",
+    "pattern_name": "Unnecessary Re-render via Inline Object",
+    "description": "Inline object/array/function prop causing re-renders",
+    "abstract_signature": "<Comp style={{color: 'red'}} />  // new object every render",
+    "severity": "low",
+    "confidence": 0.68,
+    "fix_template": "Move static objects outside component or use useMemo",
+    "ai_blindspot": "memory_trap",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "javascript"
+  },
+  {
+    "fingerprint_id": "REACT-REF-001",
+    "category": "ref_cleanup_missing",
+    "pattern_name": "Ref Cleanup Missing",
+    "description": "useRef with subscription but no cleanup",
+    "abstract_signature": "const ref = useRef(); ref.current.subscribe()  // no unsubscribe",
+    "severity": "medium",
+    "confidence": 0.76,
+    "fix_template": "Return cleanup function from useEffect",
+    "ai_blindspot": "context_lost",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "javascript"
+  },
+  {
+    "fingerprint_id": "REACT-CONTEXT-001",
+    "category": "context_prop_drilling",
+    "pattern_name": "Context Performance Anti-pattern",
+    "description": "Context value changes cause full tree re-render",
+    "abstract_signature": "<MyContext.Provider value={{a, b}}>  // new object every render",
+    "severity": "low",
+    "confidence": 0.65,
+    "fix_template": "Split contexts by update frequency or use useMemo for value",
+    "ai_blindspot": "memory_trap",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "javascript"
+  },
+  {
+    "fingerprint_id": "REACT-EFFECT-001",
+    "category": "effect_missing_deps",
+    "pattern_name": "useEffect Missing Dependencies",
+    "description": "useEffect references external variables not in dep array",
+    "abstract_signature": "useEffect(() => { console.log(props.id) }, [])  // stale closure",
+    "severity": "high",
+    "confidence": 0.85,
+    "fix_template": "Add all referenced variables to dependency array",
+    "ai_blindspot": "memory_trap",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "javascript"
+  }
+]

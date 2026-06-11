@@ -1,0 +1,577 @@
+[
+  {
+    "fingerprint_id": "SEED_PY_VAR_SCOPE_001",
+    "category": "VAR_SCOPE",
+    "pattern_name": "CROSS_FUNCTION_VARIABLE_REFERENCE",
+    "description": "函数A中引用了仅在函数B中定义的变量（跨函数复制粘贴导致变量污染）",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "同一文件中两个函数，变量在一个函数定义在另一个函数使用",
+      "example_trigger": "execute_single_task中使用sub_tasks，但sub_tasks仅在execute_group_task中定义",
+      "example_fix": "在func_a中声明变量或从func_b传入"
+    },
+    "severity": "FATAL",
+    "confidence": 0.95,
+    "fix_template": "检查变量是否应在当前函数内声明，或从调用方传入",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
+  },
+  {
+    "fingerprint_id": "SEED_PY_NULL_SAFETY_001",
+    "category": "NULL_SAFETY",
+    "pattern_name": "CHAINED_ACCESS_WITHOUT_GUARD",
+    "description": "dict.get()/.get() 返回值直接链式调用属性/下标，未检查None",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "函数参数直接访问属性/下标，无if is not None守卫",
+      "example_trigger": "request.files[0] 未检查request.files是否为None",
+      "example_fix": "if val is not None:\n    val.method()"
+    },
+    "severity": "SEVERE",
+    "confidence": 0.9,
+    "fix_template": "在访问前添加: if $VAR is not None:",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
+  },
+  {
+    "fingerprint_id": "SEED_PY_NULL_SAFETY_002",
+    "category": "NULL_SAFETY",
+    "pattern_name": "FUNCTION_PARAM_WITHOUT_NULL_CHECK",
+    "description": "函数参数可能为None，直接访问属性或调用方法",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "函数参数未做is None判断，直接访问.attr或调用.method()",
+      "example_trigger": "authorization.startswith('Bearer') 未先判空",
+      "example_fix": "if authorization and authorization.startswith('Bearer'):"
+    },
+    "severity": "SEVERE",
+    "confidence": 0.85,
+    "fix_template": "assert $PARAM is not None 或 if $PARAM:",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
+  },
+  {
+    "fingerprint_id": "SEED_PY_API_MISMATCH_001",
+    "category": "API_MISMATCH",
+    "pattern_name": "FUNCTION_ARGUMENT_COUNT_MISMATCH",
+    "description": "函数调用时传入参数数量与定义不一致",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "同文件中函数定义与调用的必需参数数量不匹配",
+      "example_trigger": "track_event()需要2个参数但被传入4个参数",
+      "example_fix": "统一函数签名，或使用*args/**kwargs"
+    },
+    "severity": "FATAL",
+    "confidence": 0.9,
+    "fix_template": "检查函数定义，确保调用参数与签名一致",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
+  },
+  {
+    "fingerprint_id": "SEED_PY_EXCEPTION_001",
+    "category": "ERR_HANDLING",
+    "pattern_name": "BARE_EXCEPT_OR_SILENT_SWALLOW",
+    "description": "使用裸except或except块中仅pass，异常被静默吞没",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "except未指定类型或except块中只有pass",
+      "example_trigger": "except: pass 导致所有异常被静默忽略",
+      "example_fix": "except SpecificError as e:\n    logger.exception(...)"
+    },
+    "severity": "SEVERE",
+    "confidence": 0.9,
+    "fix_template": "指定具体异常类型，至少记录日志",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
+  },
+  {
+    "fingerprint_id": "SEED_PY_EXCEPTION_002",
+    "category": "ERR_HANDLING",
+    "pattern_name": "EXCEPTION_CONVERTED_TO_EMPTY_RETURN",
+    "description": "except块中返回空值（None/[]/{}），调用方无法区分正常和异常",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "except块中return None/[]/{}",
+      "example_trigger": "except: return None 掩盖了真实的错误原因",
+      "example_fix": "记录异常日志，重新抛出或返回错误信息对象"
+    },
+    "severity": "MODERATE",
+    "confidence": 0.75,
+    "fix_template": "记录异常日志，考虑重新抛出",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
+  },
+  {
+    "fingerprint_id": "SEED_PY_IMPORT_001",
+    "category": "DEP_CHAIN",
+    "pattern_name": "MISSING_MODULE_OR_SYMBOL",
+    "description": "import语句引用了不存在的模块或符号",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "import的模块在sys.path或项目目录中不存在",
+      "example_trigger": "from executor_service import 不存在的函数",
+      "example_fix": "确认模块中存在该函数，检查__init__.py导出"
+    },
+    "severity": "FATAL",
+    "confidence": 0.85,
+    "fix_template": "检查目标模块的函数/类是否确实存在且已导出",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
+  },
+  {
+    "fingerprint_id": "SEED_PY_MUTABLE_DEFAULT_001",
+    "category": "STATE_SYNC",
+    "pattern_name": "MUTABLE_DEFAULT_ARGUMENT",
+    "description": "函数默认参数使用可变对象（[]/{}/set()），多次调用共享同一对象",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "def func(x=[]) 或 def func(x={})",
+      "example_trigger": "def add_item(item, items=[]): items.append(item)",
+      "example_fix": "def func(x=None):\n    if x is None: x = []"
+    },
+    "severity": "SEVERE",
+    "confidence": 0.95,
+    "fix_template": "使用None作为默认值，函数内部初始化可变对象",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
+  },
+  {
+    "fingerprint_id": "SEED_PY_CLOSURE_BINDING_001",
+    "category": "VAR_SCOPE",
+    "pattern_name": "LATE_BINDING_CLOSURE",
+    "description": "循环中创建的闭包（lambda/def）捕获了循环变量的最终值而非每次迭代的值",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "for循环中定义lambda或嵌套函数引用循环变量",
+      "example_trigger": "for i in range(3): funcs.append(lambda: i)",
+      "example_fix": "lambda i=i: i 或 functools.partial"
+    },
+    "severity": "SEVERE",
+    "confidence": 0.8,
+    "fix_template": "使用默认参数绑定当前值: lambda x=$VAR: ...",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
+  },
+  {
+    "fingerprint_id": "SEED_PY_IS_VS_EQ_001",
+    "category": "NULL_SAFETY",
+    "pattern_name": "IS_VS_EQUALS_CONFUSION",
+    "description": "使用 == 比较None/True/False而非 is，可能导致意外行为",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "使用 == 比较None、True、False",
+      "example_trigger": "if result == None: 而非 if result is None:",
+      "example_fix": "使用 is None / is not None"
+    },
+    "severity": "MINOR",
+    "confidence": 0.7,
+    "fix_template": "使用 is 而非 == 比较单例对象",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
+  },
+  {
+    "fingerprint_id": "SEED_PY_FSTRING_BRACE_001",
+    "category": "FRAGILE_PARSE",
+    "pattern_name": "FSTRING_WITH_JSON_BRACES",
+    "description": "f-string中包含JSON花括号，容易冲突或转义遗漏",
+    "abstract_signature": {
+      "pattern_type": "regex_pattern",
+      "trigger_condition": "f'...{...{{...}}...}' 多层花括号嵌套",
+      "example_trigger": "f'{{\"key\": {value}}}' 转义错误",
+      "example_fix": "使用json.dumps()代替手动拼JSON字符串"
+    },
+    "severity": "MINOR",
+    "confidence": 0.65,
+    "fix_template": "使用json.dumps()或模板引擎",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
+  },
+  {
+    "fingerprint_id": "SEED_PY_CONTEXT_MANAGER_001",
+    "category": "INCOMPLETE",
+    "pattern_name": "UNCLOSED_RESOURCE",
+    "description": "文件/连接/锁未在with语句中关闭，可能导致资源泄露",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "open()/.connect()/.acquire()未在with块中使用",
+      "example_trigger": "f = open('file.txt') 缺少f.close()或with语句",
+      "example_fix": "with open('file.txt') as f:\n    ..."
+    },
+    "severity": "MODERATE",
+    "confidence": 0.75,
+    "fix_template": "使用with语句确保资源自动释放",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
+  },
+  {
+    "fingerprint_id": "SEED_PY_ASYNCIO_001",
+    "category": "INCOMPLETE",
+    "pattern_name": "ASYNC_FUNCTION_NOT_AWAITED",
+    "description": "异步函数调用未使用await，返回协程对象而非实际结果",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "async def调用了另一个async函数但未用await",
+      "example_trigger": "result = async_func()  # 应await async_func()",
+      "example_fix": "添加await关键字"
+    },
+    "severity": "FATAL",
+    "confidence": 0.9,
+    "fix_template": "在异步函数调用前添加await",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
+  },
+  {
+    "fingerprint_id": "SEED_PY_SQL_INJECTION_001",
+    "category": "NULL_SAFETY",
+    "pattern_name": "STRING_FORMATTED_SQL",
+    "description": "使用字符串格式化/f-string拼接SQL查询，存在SQL注入风险",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "f'SELECT ... WHERE ... {user_input}' 或 '...'.format(user_input)",
+      "example_trigger": "cursor.execute(f'SELECT * FROM users WHERE id={uid}')",
+      "example_fix": "使用参数化查询: cursor.execute('... WHERE id=?', (uid,))"
+    },
+    "severity": "FATAL",
+    "confidence": 0.9,
+    "fix_template": "使用参数化查询代替字符串拼接",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
+  },
+  {
+    "fingerprint_id": "SEED_PY_HARDCODED_PATH_001",
+    "category": "DEAD_CODE",
+    "pattern_name": "HARDCODED_FILESYSTEM_PATH",
+    "description": "硬编码文件系统路径，跨平台/部署时失效",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "字符串包含绝对路径（C:\\ 或 /home/）",
+      "example_trigger": "open('C:\\\\Users\\\\admin\\\\config.json')",
+      "example_fix": "使用pathlib.Path和相对路径或环境变量"
+    },
+    "severity": "MODERATE",
+    "confidence": 0.7,
+    "fix_template": "使用相对路径或配置/环境变量",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
+  },
+  {
+    "fingerprint_id": "PY-MUTABLE-001",
+    "category": "mutable_default",
+    "pattern_name": "Mutable Default Argument",
+    "description": "List/dict/set as function default argument",
+    "abstract_signature": "def f(items=[]) or def f(config={})",
+    "severity": "high",
+    "confidence": 0.92,
+    "fix_template": "Use None as default: def f(items=None): items = items or []",
+    "ai_blindspot": "memory_trap",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "python"
+  },
+  {
+    "fingerprint_id": "PY-ASYNC-001",
+    "category": "async_no_await",
+    "pattern_name": "Async Function Without Await",
+    "description": "Defined as async but no await inside",
+    "abstract_signature": "async def fetch(): return requests.get(url)",
+    "severity": "medium",
+    "confidence": 0.78,
+    "fix_template": "Use async HTTP client (httpx/aiohttp) or remove async",
+    "ai_blindspot": "memory_trap",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "python"
+  },
+  {
+    "fingerprint_id": "PY-CLOSE-001",
+    "category": "resource_not_closed",
+    "pattern_name": "Resource Not Closed",
+    "description": "File/socket opened without with statement or close()",
+    "abstract_signature": "f = open(path); data = f.read() # no close",
+    "severity": "high",
+    "confidence": 0.85,
+    "fix_template": "Use with open(path) as f: or ensure f.close() in finally",
+    "ai_blindspot": "context_lost",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-404"
+    ],
+    "language": "python"
+  },
+  {
+    "fingerprint_id": "PY-THREAD-001",
+    "category": "thread_no_join",
+    "pattern_name": "Thread Without Join",
+    "description": "Thread started but never joined or daemonized",
+    "abstract_signature": "t = Thread(target=f); t.start() # no t.join()",
+    "severity": "medium",
+    "confidence": 0.78,
+    "fix_template": "Add t.join() with timeout or set t.daemon = True",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "python"
+  },
+  {
+    "fingerprint_id": "PY-EXCEPT-001",
+    "category": "bare_except_pass",
+    "pattern_name": "Bare Except Pass",
+    "description": "except: pass silently swallows all exceptions",
+    "abstract_signature": "except: pass without logging",
+    "severity": "high",
+    "confidence": 0.87,
+    "fix_template": "Use except Exception as e: logger.error(...)",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-703"
+    ],
+    "language": "python"
+  },
+  {
+    "fingerprint_id": "PY-IMPORT-001",
+    "category": "circular_import",
+    "pattern_name": "Circular Import Risk",
+    "description": "Top-level import between mutually dependent modules",
+    "abstract_signature": "from module_a import X in module_b (and vice versa)",
+    "severity": "medium",
+    "confidence": 0.72,
+    "fix_template": "Move import inside function or restructure modules",
+    "ai_blindspot": "context_lost",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "python"
+  },
+  {
+    "fingerprint_id": "PY-TYPE-001",
+    "category": "type_confusion",
+    "pattern_name": "Type Confusion in Comparison",
+    "description": "Type-dependent comparison that may behave unexpectedly",
+    "abstract_signature": "if value == None vs if value is None",
+    "severity": "low",
+    "confidence": 0.7,
+    "fix_template": "Use is None / is not None for singleton comparison",
+    "ai_blindspot": "memory_trap",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "python"
+  },
+  {
+    "fingerprint_id": "PY-TOCTOU-001",
+    "category": "toctou_race",
+    "pattern_name": "TOCTOU Race Condition",
+    "description": "Check-then-use file operation without atomicity",
+    "abstract_signature": "if os.path.exists(f): open(f) # file may be deleted",
+    "severity": "high",
+    "confidence": 0.8,
+    "fix_template": "Use try/except OSError instead of pre-check",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-367"
+    ],
+    "language": "python"
+  },
+  {
+    "fingerprint_id": "PY-REGEX-001",
+    "category": "regex_dos",
+    "pattern_name": "ReDoS via Catastrophic Backtracking",
+    "description": "Regex with nested quantifiers on user input",
+    "abstract_signature": "re.match(r'(a+)+b', user_input)",
+    "severity": "medium",
+    "confidence": 0.76,
+    "fix_template": "Use atomic groups or re2 library, set timeout",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-1333"
+    ],
+    "language": "python"
+  },
+  {
+    "fingerprint_id": "PY-TEMP-001",
+    "category": "insecure_tempfile",
+    "pattern_name": "Insecure Temporary File",
+    "description": "Temp file created with predictable name",
+    "abstract_signature": "open('/tmp/myapp_' + str(pid), 'w')",
+    "severity": "high",
+    "confidence": 0.84,
+    "fix_template": "Use tempfile.NamedTemporaryFile() or mkstemp()",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-377"
+    ],
+    "language": "python"
+  },
+  {
+    "fingerprint_id": "PY-MULTI-001",
+    "category": "multiprocess_unsafe",
+    "pattern_name": "Unsafe Multiprocessing Fork",
+    "description": "fork() without exec() in multi-threaded context",
+    "abstract_signature": "os.fork() in threaded program",
+    "severity": "high",
+    "confidence": 0.82,
+    "fix_template": "Use multiprocessing module with spawn start method",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "python"
+  },
+  {
+    "fingerprint_id": "PY-FLOAT-001",
+    "category": "float_equality",
+    "pattern_name": "Float Equality Comparison",
+    "description": "Direct equality comparison of floating-point numbers",
+    "abstract_signature": "if a == 0.1: # may fail due to precision",
+    "severity": "medium",
+    "confidence": 0.79,
+    "fix_template": "Use math.isclose(a, b, rel_tol=1e-9)",
+    "ai_blindspot": "memory_trap",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "python"
+  },
+  {
+    "fingerprint_id": "PY-DECOR-001",
+    "category": "decorator_side_effect",
+    "pattern_name": "Decorator Loses Metadata",
+    "description": "Decorator without @functools.wraps",
+    "abstract_signature": "def my_decorator(f): def wrapper(*a): return f(*a); return wrapper",
+    "severity": "low",
+    "confidence": 0.68,
+    "fix_template": "Add @functools.wraps(f) to wrapper function",
+    "ai_blindspot": "memory_trap",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "python"
+  },
+  {
+    "fingerprint_id": "PY-GLOB-001",
+    "category": "global_state_mutation",
+    "pattern_name": "Mutable Global State",
+    "description": "Module-level mutable variable modified across functions",
+    "abstract_signature": "MODULE_CACHE = {}  # modified in multiple functions",
+    "severity": "medium",
+    "confidence": 0.74,
+    "fix_template": "Use class with instance variables or thread-local storage",
+    "ai_blindspot": "context_lost",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "python"
+  },
+  {
+    "fingerprint_id": "PY-ENV-001",
+    "category": "env_var_missing_default",
+    "pattern_name": "Missing Env Var Default",
+    "description": "os.environ[] without default or error handling",
+    "abstract_signature": "os.environ['DATABASE_URL']  # KeyError if missing",
+    "severity": "high",
+    "confidence": 0.87,
+    "fix_template": "Use os.environ.get('DATABASE_URL', default_value)",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "python"
+  },
+  {
+    "fingerprint_id": "PY-CONN-001",
+    "category": "connection_pool_exhaust",
+    "pattern_name": "Connection Pool Exhaustion",
+    "description": "Database connection opened without pool/context manager",
+    "abstract_signature": "conn = psycopg2.connect(...)  # no context manager, no return to pool",
+    "severity": "high",
+    "confidence": 0.83,
+    "fix_template": "Use connection pool (SQLAlchemy, asyncpg pool) or context manager",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "python"
+  },
+  {
+    "fingerprint_id": "PY-GEN-001",
+    "category": "generator_not_consumed",
+    "pattern_name": "Generator Not Consumed",
+    "description": "Generator expression passed to function expecting sequence",
+    "abstract_signature": "any(x for x in items)  # fine. But: len(x for x in items)  # always 0?",
+    "severity": "medium",
+    "confidence": 0.73,
+    "fix_template": "Convert to list comprehension if multiple consumption needed",
+    "ai_blindspot": "memory_trap",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "python"
+  },
+  {
+    "fingerprint_id": "PY-SIGNAL-001",
+    "category": "signal_handler_unsafe",
+    "pattern_name": "Unsafe Signal Handler",
+    "description": "Non-async-safe function in signal handler",
+    "abstract_signature": "signal.signal(SIGTERM, handler_that_calls_print)",
+    "severity": "medium",
+    "confidence": 0.76,
+    "fix_template": "Only set flag in signal handler, process flag in main loop",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "python"
+  },
+  {
+    "fingerprint_id": "PY-EXEC-001",
+    "category": "exec_compile_dynamic",
+    "pattern_name": "Dynamic Code Execution",
+    "description": "exec() or compile() on potentially user-influenced string",
+    "abstract_signature": "exec(user_code) or compile(user_code, ...)",
+    "severity": "critical",
+    "confidence": 0.94,
+    "fix_template": "Never exec() user input. Use restricted interpreters or sandboxes",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-94"
+    ],
+    "language": "python"
+  },
+  {
+    "fingerprint_id": "PY-TIMING-001",
+    "category": "timing_side_channel",
+    "pattern_name": "Timing Side Channel",
+    "description": "String equality in authentication susceptible to timing attack",
+    "abstract_signature": "if user_token == expected_token:  # early exit leaks timing",
+    "severity": "medium",
+    "confidence": 0.77,
+    "fix_template": "Use hmac.compare_digest(user_token, expected_token)",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-208"
+    ],
+    "language": "python"
+  }
+]

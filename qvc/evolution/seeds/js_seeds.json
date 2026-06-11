@@ -1,0 +1,412 @@
+[
+  {
+    "fingerprint_id": "SEED_JS_VAR_SCOPE_001",
+    "category": "VAR_SCOPE",
+    "pattern_name": "UNDECLARED_VARIABLE_IN_JSX",
+    "description": "JSX中引用未声明的变量（函数调用返回值被误认为变量）",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "JSX中{name}引用了未在当前作用域声明的标识符",
+      "example_trigger": "{fetchTasks} 引用了函数调用而非变量",
+      "example_fix": "确认标识符在当前作用域已声明"
+    },
+    "severity": "FATAL",
+    "confidence": 0.8,
+    "fix_template": "检查变量是否已声明或应使用函数调用",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
+  },
+  {
+    "fingerprint_id": "SEED_JS_ASYNC_001",
+    "category": "INCOMPLETE",
+    "pattern_name": "UNHANDLED_PROMISE_REJECTION",
+    "description": "async函数调用未使用await或.catch()处理拒绝",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "asyncFunc()未await且未.catch()",
+      "example_trigger": "fetchData()  // Promise可能被拒绝但未处理",
+      "example_fix": "await fetchData() 或 fetchData().catch(handleErr)"
+    },
+    "severity": "SEVERE",
+    "confidence": 0.85,
+    "fix_template": "添加await或.catch()处理Promise拒绝",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
+  },
+  {
+    "fingerprint_id": "SEED_JS_PROMISE_001",
+    "category": "INCOMPLETE",
+    "pattern_name": "PROMISE_CHAIN_BREAK",
+    "description": "Promise链中未return下一个Promise，导致链断裂",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": ".then()中调用了返回Promise的函数但未return",
+      "example_trigger": ".then(() => { fetchData() }) 应 .then(() => fetchData())",
+      "example_fix": "return下一个Promise或使用async/await"
+    },
+    "severity": "MODERATE",
+    "confidence": 0.7,
+    "fix_template": "在.then()中return下一个Promise",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
+  },
+  {
+    "fingerprint_id": "SEED_JS_SCOPE_002",
+    "category": "VAR_SCOPE",
+    "pattern_name": "VAR_HOISTING_CONFUSION",
+    "description": "使用var导致变量提升（hoisting）引起的意外行为",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "在块作用域中使用var声明变量",
+      "example_trigger": "if (true) { var x = 1; } console.log(x)  // x在块外可访问",
+      "example_fix": "使用let或const替代var"
+    },
+    "severity": "MODERATE",
+    "confidence": 0.65,
+    "fix_template": "使用let/const替代var",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
+  },
+  {
+    "fingerprint_id": "SEED_JS_EQUALITY_001",
+    "category": "NULL_SAFETY",
+    "pattern_name": "LOOSE_EQUALITY_OPERATOR",
+    "description": "使用==而非===，类型强制转换可能导致意外结果",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "代码中使用==或!=运算符",
+      "example_trigger": "if (value == null)  // 也会匹配undefined",
+      "example_fix": "使用===和!== 或明确检查 null/undefined"
+    },
+    "severity": "MODERATE",
+    "confidence": 0.7,
+    "fix_template": "使用===和!==进行严格比较",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
+  },
+  {
+    "fingerprint_id": "SEED_JS_THIS_001",
+    "category": "VAR_SCOPE",
+    "pattern_name": "THIS_CONTEXT_LOSS",
+    "description": "回调函数中this指向丢失（非箭头函数中的this）",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "普通function()回调中使用this（非箭头函数）",
+      "example_trigger": "setTimeout(function() { this.doSomething() }, 100)",
+      "example_fix": "使用箭头函数或.bind(this)"
+    },
+    "severity": "SEVERE",
+    "confidence": 0.8,
+    "fix_template": "使用箭头函数保持this绑定",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
+  },
+  {
+    "fingerprint_id": "SEED_JS_TIMING_001",
+    "category": "STATE_SYNC",
+    "pattern_name": "RACE_CONDITION_SETSTATE",
+    "description": "依赖前一个setState结果的连续调用，可能读到旧值",
+    "abstract_signature": {
+      "pattern_type": "semantic_pattern",
+      "trigger_condition": "连续多个setState()调用，第二个依赖第一个的结果",
+      "example_trigger": "setCount(count+1); setCount(count+1)  // count只加1",
+      "example_fix": "使用函数式更新: setCount(c => c + 1)"
+    },
+    "severity": "MODERATE",
+    "confidence": 0.7,
+    "fix_template": "使用函数式更新setState(prev => ...)",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
+  },
+  {
+    "fingerprint_id": "SEED_JS_MEMORY_001",
+    "category": "INCOMPLETE",
+    "pattern_name": "EVENT_LISTENER_NOT_REMOVED",
+    "description": "添加的事件监听器未在组件卸载时移除，导致内存泄漏",
+    "abstract_signature": {
+      "pattern_type": "semantic_pattern",
+      "trigger_condition": "addEventListener无对应的removeEventListener",
+      "example_trigger": "useEffect中addEventListener但无cleanup",
+      "example_fix": "在useEffect的cleanup中removeEventListener"
+    },
+    "severity": "MODERATE",
+    "confidence": 0.75,
+    "fix_template": "在cleanup函数中移除事件监听器",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
+  },
+  {
+    "fingerprint_id": "SEED_JS_NULL_001",
+    "category": "NULL_SAFETY",
+    "pattern_name": "OPTIONAL_CHAINING_MISSING",
+    "description": "深层属性访问未使用可选链(?.)，可能抛出TypeError",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "a.b.c 深层属性访问无?.保护",
+      "example_trigger": "user.profile.name  // user.profile可能为undefined",
+      "example_fix": "user?.profile?.name"
+    },
+    "severity": "SEVERE",
+    "confidence": 0.8,
+    "fix_template": "使用可选链 ?. 或条件判断保护深层访问",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
+  },
+  {
+    "fingerprint_id": "SEED_JS_CLOSURE_001",
+    "category": "VAR_SCOPE",
+    "pattern_name": "LOOP_CLOSURE_STALE_REFERENCE",
+    "description": "循环中使用var声明的变量被闭包捕获，所有闭包共享同一变量",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "for(var i...) 循环体内创建闭包引用i",
+      "example_trigger": "for (var i = 0; i < 3; i++) { setTimeout(() => console.log(i)) }",
+      "example_fix": "使用let代替var"
+    },
+    "severity": "SEVERE",
+    "confidence": 0.8,
+    "fix_template": "使用let声明循环变量",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
+  },
+  {
+    "fingerprint_id": "JS-PROMISE-001",
+    "category": "floating_promise_js",
+    "pattern_name": "Floating Promise",
+    "description": "Promise created but not returned or awaited",
+    "abstract_signature": "fetch('/api');  // Promise not handled",
+    "severity": "high",
+    "confidence": 0.82,
+    "fix_template": "Add await: const res = await fetch('/api') or .catch()",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "javascript"
+  },
+  {
+    "fingerprint_id": "JS-TYPE-001",
+    "category": "coercion_trap",
+    "pattern_name": "Type Coercion Trap",
+    "description": "Loose equality with different types",
+    "abstract_signature": "if (value == '0')  // 0 == '0' is true",
+    "severity": "medium",
+    "confidence": 0.8,
+    "fix_template": "Use strict equality: if (value === '0')",
+    "ai_blindspot": "memory_trap",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "javascript"
+  },
+  {
+    "fingerprint_id": "JS-CLOSURE-001",
+    "category": "closure_stale_ref",
+    "pattern_name": "Stale Closure Reference",
+    "description": "Loop variable captured by closure with var",
+    "abstract_signature": "for (var i = 0; i < n; i++) { setTimeout(() => console.log(i), 100) }",
+    "severity": "high",
+    "confidence": 0.85,
+    "fix_template": "Use let instead of var, or bind the value",
+    "ai_blindspot": "memory_trap",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "javascript"
+  },
+  {
+    "fingerprint_id": "JS-STORAGE-001",
+    "category": "localstorage_sensitive",
+    "pattern_name": "Sensitive Data in localStorage",
+    "description": "Auth token stored in localStorage",
+    "abstract_signature": "localStorage.setItem('token', jwt)",
+    "severity": "high",
+    "confidence": 0.88,
+    "fix_template": "Use httpOnly cookies or sessionStorage with short expiry",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-922"
+    ],
+    "language": "javascript"
+  },
+  {
+    "fingerprint_id": "JS-NPM-001",
+    "category": "deprecated_package",
+    "pattern_name": "Deprecated Package Usage",
+    "description": "Package with known vulnerabilities or deprecated",
+    "abstract_signature": "require('request')  // deprecated since 2020",
+    "severity": "medium",
+    "confidence": 0.72,
+    "fix_template": "Use maintained alternatives: node-fetch or axios",
+    "ai_blindspot": "context_lost",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-1104"
+    ],
+    "language": "javascript"
+  },
+  {
+    "fingerprint_id": "JS-EVENT-001",
+    "category": "event_listener_leak",
+    "pattern_name": "Event Listener Memory Leak",
+    "description": "addEventListener without corresponding removeEventListener",
+    "abstract_signature": "element.addEventListener('click', handler)  // no cleanup",
+    "severity": "medium",
+    "confidence": 0.76,
+    "fix_template": "Use AbortController or call removeEventListener on cleanup",
+    "ai_blindspot": "context_lost",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-401"
+    ],
+    "language": "javascript"
+  },
+  {
+    "fingerprint_id": "JS-GLOBAL-001",
+    "category": "global_pollution",
+    "pattern_name": "Global Namespace Pollution",
+    "description": "Assignment to window/global without intention",
+    "abstract_signature": "name = 'foo'  // implicit global in non-strict mode",
+    "severity": "medium",
+    "confidence": 0.78,
+    "fix_template": "Always use 'use strict' and let/const declarations",
+    "ai_blindspot": "memory_trap",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "javascript"
+  },
+  {
+    "fingerprint_id": "JS-CB-001",
+    "category": "callback_hell",
+    "pattern_name": "Deeply Nested Callback",
+    "description": "Callback >3 levels deep without error propagation",
+    "abstract_signature": "step1((err, r1) => { step2((err, r2) => { step3(...) }) })",
+    "severity": "low",
+    "confidence": 0.65,
+    "fix_template": "Refactor to async/await or Promise chain with .then()",
+    "ai_blindspot": "memory_trap",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "javascript"
+  },
+  {
+    "fingerprint_id": "JS-BOM-001",
+    "category": "bom_in_source",
+    "pattern_name": "UTF-8 BOM in Source File",
+    "description": "JavaScript source file starts with BOM bytes",
+    "abstract_signature": "file starts with \\xef\\xbb\\xbf",
+    "severity": "low",
+    "confidence": 0.9,
+    "fix_template": "Save file as UTF-8 without BOM",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "javascript"
+  },
+  {
+    "fingerprint_id": "JS-SSR-001",
+    "category": "ssr_state_leak",
+    "pattern_name": "SSR State Leak Between Requests",
+    "description": "Module-level state shared across requests in SSR",
+    "abstract_signature": "let userData = null  // shared across all server requests",
+    "severity": "high",
+    "confidence": 0.84,
+    "fix_template": "Use per-request context (React Server Components, Next.js request context)",
+    "ai_blindspot": "context_lost",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "javascript"
+  },
+  {
+    "fingerprint_id": "JS-SERIAL-001",
+    "category": "prototype_pollution_merge",
+    "pattern_name": "Prototype Pollution via Object Merge",
+    "description": "Deep merge without hasOwnProperty check",
+    "abstract_signature": "Object.assign(target, userObj) or {...target, ...userObj}",
+    "severity": "high",
+    "confidence": 0.85,
+    "fix_template": "Use Object.create(null) or filter __proto__/constructor keys",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-1321"
+    ],
+    "language": "javascript"
+  },
+  {
+    "fingerprint_id": "JS-RACE-001",
+    "category": "race_condition_async",
+    "pattern_name": "Async Race Condition",
+    "description": "Non-atomic read-modify-write in async context",
+    "abstract_signature": "const v = await cache.get('k'); await cache.set('k', v+1)",
+    "severity": "high",
+    "confidence": 0.8,
+    "fix_template": "Use atomic operations: cache.incr('k') or database transactions",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-362"
+    ],
+    "language": "javascript"
+  },
+  {
+    "fingerprint_id": "JS-CSP-001",
+    "category": "csp_missing",
+    "pattern_name": "Missing Content-Security-Policy",
+    "description": "No CSP header on HTML page",
+    "abstract_signature": "HTML without <meta http-equiv='Content-Security-Policy'>",
+    "severity": "high",
+    "confidence": 0.83,
+    "fix_template": "Add CSP header with strict-dynamic or nonce-based policy",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-1021"
+    ],
+    "language": "javascript"
+  },
+  {
+    "fingerprint_id": "JS-SRI-001",
+    "category": "sri_missing",
+    "pattern_name": "Missing Subresource Integrity",
+    "description": "CDN script loaded without integrity attribute",
+    "abstract_signature": "<script src='https://cdn.com/lib.js'> without integrity='sha384-...'",
+    "severity": "medium",
+    "confidence": 0.78,
+    "fix_template": "Add integrity and crossorigin attributes to CDN scripts",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-353"
+    ],
+    "language": "javascript"
+  },
+  {
+    "fingerprint_id": "JS-TS-ANY-001",
+    "category": "typescript_any_escape",
+    "pattern_name": "TypeScript any Type Escape Hatch",
+    "description": "Explicit any type annotation that defeats type checking",
+    "abstract_signature": "const data: any = JSON.parse(input)",
+    "severity": "low",
+    "confidence": 0.7,
+    "fix_template": "Define proper type interface or use unknown + type guard",
+    "ai_blindspot": "memory_trap",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "typescript"
+  }
+]

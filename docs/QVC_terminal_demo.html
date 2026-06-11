@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>QVC — 30 Second Demo</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #1e1e2e; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace; }
+.terminal { width: 780px; background: #11111b; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.5); }
+.titlebar { background: #181825; padding: 14px 20px; display: flex; align-items: center; gap: 10px; }
+.dot { width: 13px; height: 13px; border-radius: 50%; }
+.dot.red { background: #f38ba8; } .dot.yellow { background: #f9e2af; } .dot.green { background: #a6e3a1; }
+.title { color: #cdd6f4; font-size: 13px; margin-left: 12px; opacity: .7; }
+.body { padding: 24px; min-height: 420px; color: #cdd6f4; font-size: 14px; line-height: 1.7; }
+.line { opacity: 0; animation: appear .15s forwards; }
+.prompt { color: #a6e3a1; } .cmd { color: #89b4fa; } .output { color: #bac2de; }
+.bug { color: #fab387; } .highlight { color: #f9e2af; font-weight: bold; }
+.green { color: #a6e3a1; } .cyan { color: #89dceb; }
+@keyframes appear { to { opacity: 1; } }
+</style>
+</head>
+<body>
+<div class="terminal">
+<div class="titlebar">
+<div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+<div class="title">Terminal — QVC Demo</div>
+</div>
+<div class="body" id="body"></div>
+</div>
+<script>
+const lines = [
+  {t:0,   c:'prompt',  txt:'$ '},{t:0, c:'cmd', txt:'pip install qvc-overseer'},
+  {t:600, c:'output', txt:'Successfully installed qvc-overseer-0.6.5'},
+  {t:1200, c:'prompt', txt:'$ '},{t:1200, c:'cmd', txt:'cd my-ai-project'},
+  {t:1800, c:'prompt', txt:'$ '},{t:1800, c:'cmd', txt:'qvc scan .'},
+  {t:2400, c:'output', txt:'Scanning: .'},
+  {t:2700, c:'output', txt:'Found 120 files, 19,705 lines'},
+  {t:3000, c:'output', txt:'Languages: python, javascript, typescript'},
+  {t:3300, c:'cyan',  txt:'Static analysis...'},
+  {t:3800, c:'cyan',  txt:'[====================================>] 100%'},
+  {t:4200, c:'output', txt:'Candidates: 2,071 -> filtering...'},
+  {t:5000, c:'green', txt:'Report: qvc-report.md'},
+  {t:5300, c:'green', txt:'Done! 1.1s, 4 bugs'},
+  {t:5700, c:'output', txt:''},
+  {t:5800, c:'highlight',txt:'... [AHA] Your AI cannot see these ...'},
+  {t:6200, c:'bug',   txt:'  [90%] create_session() signature mismatch (22 sites)'},
+  {t:6700, c:'output',txt:'       blindspot: context lost | AI self-detectable: NO'},
+  {t:7200, c:'bug',   txt:'  [85%] Silent exception swallowing (23 sites)'},
+  {t:7700, c:'output',txt:'       blindspot: boundary condition | AI self-detectable: NO'},
+  {t:9000, c:'highlight',txt:'  AI missed rate: 100%'},
+  {t:9400, c:'output',txt:'  These are issues your AI Agent structurally cannot see.'},
+  {t:10000,c:'cyan',  txt:'  Full report: qvc-report.md'},
+  {t:10600,c:'green', txt:'  If this helped, share:'},
+  {t:10800,c:'output',txt:'  "QVC found 4 issues my AI reviewer and I both missed."'},
+  {t:12000,c:'prompt',txt:'$ '},
+  {t:12000,c:'cmd',  txt:'qvc fix'},
+  {t:12600,c:'output',txt:'Generated fix-instructions.md'},
+  {t:12900,c:'output',txt:'Copy-paste into your AI Agent to fix all 4 bugs.'},
+  {t:13300,c:'green', txt:'Done. Total time: <2 min from install to fix.'},
+];
+const body = document.getElementById('body');
+let idx = 0;
+function show() {
+  if (idx >= lines.length) return;
+  const l = lines[idx];
+  const el = document.createElement('span');
+  el.className = 'line ' + l.c;
+  el.textContent = l.txt;
+  document.getElementById('body').appendChild(el);
+  if (l.txt !== '' && !l.txt.endsWith('...')) document.getElementById('body').appendChild(document.createTextNode('
+'));
+  idx++;
+  const next = idx < lines.length ? lines[idx].t - l.t : 2000;
+  setTimeout(show, Math.max(next, 80));
+}
+show();
+</script>
+</body>
+</html>
