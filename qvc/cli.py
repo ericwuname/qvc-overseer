@@ -106,6 +106,35 @@ def _register_builtin_rules():
     from qvc.rules.react.state_immutable import ReactStateImmutableRule
     from qvc.rules.typescript.type_safety import TSTypeSafetyRule
     from qvc.rules.go.nil_safety import GoNilSafetyRule
+    from qvc.rules.python.sql_injection import SQLInjectionRule
+    from qvc.rules.python.mutable_defaults import MutableDefaultsRule
+    from qvc.rules.python.resource_leak import ResourceLeakRule
+    from qvc.rules.python.unsafe_pickle import UnsafePickleRule
+    from qvc.rules.python.assert_in_prod import AssertForLogicRule
+    from qvc.rules.python.http_no_timeout import HTTPNoTimeoutRule
+    from qvc.rules.javascript.eval_usage import EvalUsageRule
+    from qvc.rules.javascript.dom_xss import DOMXSSRule
+    from qvc.rules.javascript.unhandled_promise import UnhandledPromiseRule
+    from qvc.rules.javascript.unsafe_json_parse import UnsafeJSONParseRule
+    from qvc.rules.react.missing_key import MissingKeyRule
+    from qvc.rules.react.dangerous_html import DangerousHTMLRule
+    from qvc.rules.universal.hardcoded_credentials import HardcodedCredentialsRule
+    from qvc.rules.universal.insecure_random import InsecureRandomRule
+    from qvc.rules.universal.todo_ticket import TODOTicketRule
+    from qvc.rules.python.race_condition import RaceConditionRule
+    from qvc.rules.python.path_traversal import PathTraversalRule
+    from qvc.rules.python.subprocess_injection import SubprocessInjectionRule
+    from qvc.rules.python.unsafe_yaml import UnsafeYAMLRule
+    from qvc.rules.python.os_system import OSSystemRule
+    from qvc.rules.python.socket_no_timeout import SocketNoTimeoutRule
+    from qvc.rules.javascript.prototype_pollution import PrototypePollutionRule
+    from qvc.rules.javascript.nosql_injection import NoSQLInjectionRule
+    from qvc.rules.javascript.path_traversal_js import PathTraversalJSRule
+    from qvc.rules.javascript.floating_promise import FloatingPromiseRule
+    from qvc.rules.go.goroutine_leak import GoroutineLeakRule
+    from qvc.rules.go.defer_error import DeferErrorRule
+    from qvc.rules.react.unused_state import UnusedStateRule
+    from qvc.rules.typescript.ts_any_type import TSAnyTypeRule
 
     if not rule_registry.get_all_rules():
         rule_registry.register_many([
@@ -118,6 +147,21 @@ def _register_builtin_rules():
             JSMemoryLeakRule(), ReactStateImmutableRule(), TSTypeSafetyRule(),
             GoNilSafetyRule(),
             PythonAPIDriftRule(), PythonStaleReferenceRule(),
+            SQLInjectionRule(), MutableDefaultsRule(),
+            ResourceLeakRule(), UnsafePickleRule(),
+            AssertForLogicRule(), HTTPNoTimeoutRule(),
+            EvalUsageRule(), DOMXSSRule(),
+            UnhandledPromiseRule(), UnsafeJSONParseRule(),
+            MissingKeyRule(), DangerousHTMLRule(),
+            HardcodedCredentialsRule(), InsecureRandomRule(),
+            TODOTicketRule(),
+            RaceConditionRule(), PathTraversalRule(),
+            SubprocessInjectionRule(), UnsafeYAMLRule(),
+            OSSystemRule(), SocketNoTimeoutRule(),
+            PrototypePollutionRule(), NoSQLInjectionRule(),
+            PathTraversalJSRule(), FloatingPromiseRule(),
+            GoroutineLeakRule(), DeferErrorRule(),
+            UnusedStateRule(), TSAnyTypeRule(),
         ])
 
 

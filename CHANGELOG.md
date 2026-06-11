@@ -1,5 +1,34 @@
 # QVC Changelog
 
+## [0.8.0] — 2026-06-11 — V6.5 "Rule Expansion"
+
+### Added
+- **29 new detection rules** (21 -> 50 total rules)
+- **Python (12 new)**: sql_injection, mutable_default_args, resource_leak,
+  unsafe_pickle, assert_in_prod, http_no_timeout, race_condition,
+  path_traversal, subprocess_injection, unsafe_yaml, os_system, socket_no_timeout
+- **JavaScript/TypeScript (8 new)**: eval_usage, dom_xss, unhandled_promise,
+  unsafe_json_parse, prototype_pollution, nosql_injection, path_traversal_js,
+  floating_promise
+- **React (3 new)**: missing_list_key, dangerous_html, unused_state_setter
+- **Go (2 new)**: goroutine_leak, defer_error_ignored
+- **TypeScript (1 new)**: ts_any_type
+- **Universal (3 new)**: hardcoded_credentials, insecure_random, todo_no_ticket
+- **International documentation**: 7 English docs (User Guide, Business Pitch,
+  Project Report, Execution Guide, Comparison Report, Retrospective, Terminal Demo)
+- **Bilingual README** with language switcher
+- **One-click install scripts**: install.bat (Windows) + install.sh (Mac/Linux)
+- **CONTRIBUTING.md** international edition
+
+### Changed
+- Rule count: 21 -> 50
+- Self-scan false positive rate: improved via BOM fix
+- All GitHub URLs unified to ericwuname/qvc-overseer
+
+### Fixed
+- UTF-8 BOM stripped from cli.py
+- Version number sync between pyproject.toml and qvc/__init__.py
+
 ## [0.6.0a1] — 2026-06-11 — V6 "Closed Loop"
 
 ### Added
