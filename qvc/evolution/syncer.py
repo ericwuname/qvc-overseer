@@ -100,6 +100,37 @@ class GenePoolSyncer:
         except Exception:
             return {"has_updates": False, "message": "离线模式"}
 
+    
+    def sync_incremental(self) -> dict:
+        """V7: Incremental delta sync — only download fingerprints newer than last sync."""
+        result = {"added": 0, "updated": 0, "skipped": 0, "errors": []}
+        
+        last_sync = self.store.get_last_sync_time()
+        pool_fps = self._load_pool_fingerprints()
+        
+        for fp in pool_fps:
+            fp_updated = fp.get("updated_at", fp.get("created_at", ""))
+            fingerprint_id = fp.get("fingerprint_id", "")
+            
+            # Skip if already synced and not updated
+            existing = self.store.get_fingerprint(fingerprint_id)
+            if existing and fp_updated <= last_sync:
+                result["skipped"] += 1
+                continue
+            
+            try:
+                if existing:
+                    self.store.update_fingerprint(fingerprint_id, fp)
+                    result["updated"] += 1
+                else:
+                    self.store.add_fingerprint(fp)
+                    result["added"] += 1
+            except Exception as e:
+                result["errors"].append(f"{fingerprint_id}: {e}")
+        
+        self.store.set_last_sync_time()
+        return result
+
     def _update_pool(self) -> bool:
         """Update local gene pool. Git-first, graceful fallback to local files."""
         has_local = self.pool_dir.exists() and (self.pool_dir / "fingerprints").exists()

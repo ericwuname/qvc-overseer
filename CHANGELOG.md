@@ -1,5 +1,26 @@
 # QVC Changelog
 
+## [0.9.0] — 2026-06-12 — V7 "Gene Pool"
+
+### Added
+- **145 seed fingerprints** (55 -> 145, +90 new)
+- **Gene pool repository**: qvc-fingerprints with verified/ and candidates/
+- **Incremental sync**: sync_incremental() pulls only new/updated fingerprints
+- **Contribution validator**: validate_fingerprint() checks schema before submission
+- **PR body generator**: generate_pr_body() creates structured contribution PRs
+- **New fingerprint fields**: ai_blindspot + verified_projects on all fingerprints
+- **Go fingerprints**: 15 Go-specific patterns (goroutine leak, defer error, etc.)
+- **CWE coverage**: 15 -> 35 CWE patterns
+- **V6.5 retrospective** (CN + EN)
+- **V7 execution guide** (CN + EN)
+- **V7 project report** (CN + EN)
+
+### Changed
+- fingerprint_store.py: loads go_seeds.json + seed_fingerprints.json
+- syncer.py: sync_incremental() method for delta-only updates
+- contributor.py: validate + generate PR body methods
+- All fingerprints normalized with V7 schema fields
+
 ## [0.8.0] — 2026-06-11 — V6.5 "Rule Expansion"
 
 ### Added

@@ -66,6 +66,41 @@ class Contributor:
 
         return filepath
 
+    
+    def validate_fingerprint(self, fp: dict) -> list[str]:
+        """Validate a fingerprint before submission. Returns list of issues (empty = valid)."""
+        issues = []
+        required = ["fingerprint_id", "category", "abstract_signature", "severity"]
+        for field in required:
+            if not fp.get(field):
+                issues.append(f"Missing required field: {field}")
+        if fp.get("confidence", 0) < 0.5:
+            issues.append("Confidence too low (< 0.5)")
+        if fp.get("confidence", 0) > 1.0:
+            issues.append("Confidence out of range (> 1.0)")
+        if fp.get("severity") not in ("critical", "high", "medium", "low"):
+            issues.append(f"Invalid severity: {fp.get('severity')}")
+        return issues
+    
+    def generate_pr_body(self, contributions: list[dict]) -> str:
+        """Generate a PR description for the contributions."""
+        lines = ["# QVC Fingerprint Contribution", "",
+                  f"**Contributions**: {len(contributions)} fingerprints", "",
+                  "## Summary", ""]
+        for c in contributions:
+            lines.append(f"- **{c['fingerprint_id']}**: {c.get('pattern_name', 'N/A')}")
+            lines.append(f"  - Category: {c.get('category', 'N/A')}")
+            lines.append(f"  - Severity: {c.get('severity', 'N/A')} (confidence: {c.get('confidence', 0):.0%})")
+            lines.append(f"  - AI Blindspot: {c.get('ai_blindspot', 'N/A')}")
+            if c.get('verified_projects'):
+                lines.append(f"  - Verified on: {', '.join(c['verified_projects'])}")
+            lines.append("")
+        lines.append("## Checklist")
+        lines.append("- [ ] All fingerprints validated")
+        lines.append("- [ ] No false-positive patterns")
+        lines.append("- [ ] Follows fingerprint schema")
+        return chr(10).join(lines)
+
     def submit_via_pr(self, contributions: list[dict], repo_url: str) -> dict:
         """通过PR提交流程（需git支持）"""
         import subprocess

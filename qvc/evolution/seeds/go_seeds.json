@@ -1,0 +1,242 @@
+[
+  {
+    "fingerprint_id": "GO-NIL-001",
+    "category": "nil_pointer_deref_go",
+    "pattern_name": "Nil Pointer Dereference",
+    "description": "Pointer used without nil check after potential nil return",
+    "abstract_signature": "val := maybeNil(); val.DoSomething()  // no nil check",
+    "severity": "high",
+    "confidence": 0.88,
+    "fix_template": "Add if val != nil check before use",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-476"
+    ],
+    "language": "go"
+  },
+  {
+    "fingerprint_id": "GO-ERR-001",
+    "category": "error_not_checked",
+    "pattern_name": "Error Not Checked",
+    "description": "Function returns error but return value not assigned or checked",
+    "abstract_signature": "json.Unmarshal(data, &v)  // error ignored (pre-go1.x pattern)",
+    "severity": "high",
+    "confidence": 0.9,
+    "fix_template": "Always check: if err := json.Unmarshal(data, &v); err != nil {",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-252"
+    ],
+    "language": "go"
+  },
+  {
+    "fingerprint_id": "GO-DEFER-001",
+    "category": "defer_error_ignored_go",
+    "pattern_name": "Deferred Error Ignored",
+    "description": "Deferred Close() error not handled",
+    "abstract_signature": "defer f.Close()  // Close() returns error but not checked",
+    "severity": "medium",
+    "confidence": 0.78,
+    "fix_template": "Use defer func() { if err := f.Close(); err != nil { log(err) } }()",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "go"
+  },
+  {
+    "fingerprint_id": "GO-GOROUTINE-001",
+    "category": "goroutine_no_recovery",
+    "pattern_name": "Goroutine Without Recovery",
+    "description": "Goroutine started without panic recovery",
+    "abstract_signature": "go func() { doWork() }()  // panic kills the program",
+    "severity": "high",
+    "confidence": 0.85,
+    "fix_template": "Add defer-recover inside goroutine, or use errgroup",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "go"
+  },
+  {
+    "fingerprint_id": "GO-CONTEXT-001",
+    "category": "context_not_passed",
+    "pattern_name": "Context Not Propagated",
+    "description": "HTTP handler or goroutine without context.Context",
+    "abstract_signature": "func handler(w http.ResponseWriter, r *http.Request) { go work() }",
+    "severity": "high",
+    "confidence": 0.84,
+    "fix_template": "Pass r.Context() to downstream calls and goroutines",
+    "ai_blindspot": "context_lost",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "go"
+  },
+  {
+    "fingerprint_id": "GO-MUTEX-001",
+    "category": "mutex_copy",
+    "pattern_name": "Mutex Passed by Value",
+    "description": "sync.Mutex passed by value (copy) instead of pointer",
+    "abstract_signature": "func process(mu sync.Mutex) { mu.Lock() }  // locks a copy",
+    "severity": "high",
+    "confidence": 0.88,
+    "fix_template": "Always pass mutex by pointer: func process(mu *sync.Mutex)",
+    "ai_blindspot": "memory_trap",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "go"
+  },
+  {
+    "fingerprint_id": "GO-SLICE-001",
+    "category": "slice_modification_in_range",
+    "pattern_name": "Slice Modification During Range",
+    "description": "Appending to slice while ranging over it",
+    "abstract_signature": "for _, v := range slice { slice = append(slice, v) }",
+    "severity": "medium",
+    "confidence": 0.78,
+    "fix_template": "Use a separate result slice or index-based loop",
+    "ai_blindspot": "memory_trap",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "go"
+  },
+  {
+    "fingerprint_id": "GO-MAP-001",
+    "category": "concurrent_map_access",
+    "pattern_name": "Concurrent Map Access",
+    "description": "Map read/write from multiple goroutines without sync",
+    "abstract_signature": "go func() { m['key'] = val }(); go func() { _ = m['key'] }()",
+    "severity": "critical",
+    "confidence": 0.9,
+    "fix_template": "Use sync.RWMutex or sync.Map for concurrent access",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-362"
+    ],
+    "language": "go"
+  },
+  {
+    "fingerprint_id": "GO-CHAN-001",
+    "category": "channel_deadlock",
+    "pattern_name": "Channel Deadlock Risk",
+    "description": "Unbuffered channel send with no corresponding receiver",
+    "abstract_signature": "ch := make(chan int); ch <- 1  // blocks forever if no goroutine receiving",
+    "severity": "high",
+    "confidence": 0.84,
+    "fix_template": "Use buffered channel or ensure receiver is ready",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "go"
+  },
+  {
+    "fingerprint_id": "GO-INTERFACE-001",
+    "category": "interface_nil_trap",
+    "pattern_name": "Interface Nil Trap",
+    "description": "Nil concrete type stored in non-nil interface",
+    "abstract_signature": "var w io.Writer = (*os.File)(nil); w.Write(...)  // panic",
+    "severity": "high",
+    "confidence": 0.82,
+    "fix_template": "Check the concrete value, not just the interface",
+    "ai_blindspot": "memory_trap",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "go"
+  },
+  {
+    "fingerprint_id": "GO-TIME-001",
+    "category": "time_after_leak",
+    "pattern_name": "time.After Memory Leak",
+    "description": "time.After in select loop creates new timer each iteration",
+    "abstract_signature": "for { select { case <-time.After(d): ... } }",
+    "severity": "high",
+    "confidence": 0.86,
+    "fix_template": "Use time.NewTimer and reset it in the loop",
+    "ai_blindspot": "memory_trap",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "go"
+  },
+  {
+    "fingerprint_id": "GO-CLOSE-001",
+    "category": "http_body_not_closed",
+    "pattern_name": "HTTP Response Body Not Closed",
+    "description": "http.Get() response body not closed",
+    "abstract_signature": "resp, err := http.Get(url); // no resp.Body.Close()",
+    "severity": "high",
+    "confidence": 0.88,
+    "fix_template": "Always defer resp.Body.Close() after checking err",
+    "ai_blindspot": "context_lost",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-404"
+    ],
+    "language": "go"
+  },
+  {
+    "fingerprint_id": "GO-SQL-001",
+    "category": "sql_injection_concat_go",
+    "pattern_name": "SQL Injection via Concatenation",
+    "description": "SQL query built with fmt.Sprintf from user input",
+    "abstract_signature": "db.Query(fmt.Sprintf('SELECT * FROM users WHERE id=%s', userID))",
+    "severity": "critical",
+    "confidence": 0.93,
+    "fix_template": "Use parameterized queries: db.Query('SELECT * FROM users WHERE id=?', userID)",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-89"
+    ],
+    "language": "go"
+  },
+  {
+    "fingerprint_id": "GO-INT-001",
+    "category": "integer_overflow_go",
+    "pattern_name": "Integer Overflow in Go",
+    "description": "Unchecked integer conversion or arithmetic",
+    "abstract_signature": "int64(bigValue)  // may overflow silently",
+    "severity": "medium",
+    "confidence": 0.78,
+    "fix_template": "Check bounds before conversion or use math/big",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-190"
+    ],
+    "language": "go"
+  },
+  {
+    "fingerprint_id": "GO-CGO-001",
+    "category": "cgo_unsafe",
+    "pattern_name": "Unsafe CGo Pointer Usage",
+    "description": "Go pointer passed to C without proper pinning",
+    "abstract_signature": "C.process(unsafe.Pointer(&goValue))  // GC may move goValue",
+    "severity": "critical",
+    "confidence": 0.9,
+    "fix_template": "Pin the value with runtime.KeepAlive or allocate in C",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "go"
+  }
+]

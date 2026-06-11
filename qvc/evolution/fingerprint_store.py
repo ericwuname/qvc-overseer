@@ -78,7 +78,7 @@ class FingerprintStore:
             conn.close()
 
         seeds_dir = Path(__file__).parent / "seeds"
-        seed_files = ["python_seeds.json", "cwe_seeds.json", "js_seeds.json", "react_seeds.json"]
+        seed_files = ["python_seeds.json", "cwe_seeds.json", "js_seeds.json", "react_seeds.json", "go_seeds.json", "seed_fingerprints.json"]
 
         all_seeds = []
         for filename in seed_files:
@@ -106,6 +106,11 @@ class FingerprintStore:
 
         import_fps = []
         for s in all_seeds:
+            # Normalize V7 fields
+            if "ai_blindspot" not in s:
+                s["ai_blindspot"] = "boundary_condition"
+            if "verified_projects" not in s:
+                s["verified_projects"] = []
             import_fps.append({
                 "fingerprint_id": s["fingerprint_id"],
                 "category": s["category"],

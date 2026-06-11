@@ -13,7 +13,9 @@
     },
     "severity": "FATAL",
     "confidence": 0.95,
-    "fix_template": "检查变量是否应在当前函数内声明，或从调用方传入"
+    "fix_template": "检查变量是否应在当前函数内声明，或从调用方传入",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
   },
   {
     "fingerprint_id": "SEED_NULL_SAFETY_001",
@@ -28,8 +30,10 @@
       "example_fix": "if $REQUEST and $REQUEST.$ATTR:\n    ..."
     },
     "severity": "SEVERE",
-    "confidence": 0.90,
-    "fix_template": "在访问前添加: if $VAR is not None:"
+    "confidence": 0.9,
+    "fix_template": "在访问前添加: if $VAR is not None:",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
   },
   {
     "fingerprint_id": "SEED_API_MISMATCH_001",
@@ -44,8 +48,10 @@
       "example_fix": "统一函数签名，或使用*args/**kwargs"
     },
     "severity": "FATAL",
-    "confidence": 0.90,
-    "fix_template": "检查函数定义，确保调用参数与签名一致"
+    "confidence": 0.9,
+    "fix_template": "检查函数定义，确保调用参数与签名一致",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
   },
   {
     "fingerprint_id": "SEED_IMPORT_001",
@@ -61,7 +67,9 @@
     },
     "severity": "FATAL",
     "confidence": 0.85,
-    "fix_template": "检查目标模块的函数/类是否确实存在且已导出"
+    "fix_template": "检查目标模块的函数/类是否确实存在且已导出",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
   },
   {
     "fingerprint_id": "SEED_EXCEPTION_001",
@@ -76,8 +84,10 @@
       "example_fix": "except SpecificError as e:\n    logger.exception(...)"
     },
     "severity": "SEVERE",
-    "confidence": 0.90,
-    "fix_template": "指定具体异常类型，至少记录日志"
+    "confidence": 0.9,
+    "fix_template": "指定具体异常类型，至少记录日志",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
   },
   {
     "fingerprint_id": "SEED_ENCODING_001",
@@ -93,7 +103,9 @@
     },
     "severity": "SEVERE",
     "confidence": 0.95,
-    "fix_template": "以UTF-8 without BOM格式重新保存文件"
+    "fix_template": "以UTF-8 without BOM格式重新保存文件",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
   },
   {
     "fingerprint_id": "SEED_FRAGILE_PARSE_001",
@@ -109,7 +121,9 @@
     },
     "severity": "MODERATE",
     "confidence": 0.75,
-    "fix_template": "使用结构化数据格式（JSON）替代文本解析"
+    "fix_template": "使用结构化数据格式（JSON）替代文本解析",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
   },
   {
     "fingerprint_id": "SEED_STATE_SYNC_001",
@@ -124,8 +138,10 @@
       "example_fix": "修订成功后调用invalidate查询或返回最新数据"
     },
     "severity": "SEVERE",
-    "confidence": 0.80,
-    "fix_template": "写操作后主动刷新相关缓存或返回最新数据"
+    "confidence": 0.8,
+    "fix_template": "写操作后主动刷新相关缓存或返回最新数据",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
   },
   {
     "fingerprint_id": "SEED_DEAD_CODE_001",
@@ -140,8 +156,10 @@
       "example_fix": "删除注释掉的代码，或添加TODO说明保留原因"
     },
     "severity": "MINOR",
-    "confidence": 0.70,
-    "fix_template": "清理注释掉的代码或添加TODO标记"
+    "confidence": 0.7,
+    "fix_template": "清理注释掉的代码或添加TODO标记",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
   },
   {
     "fingerprint_id": "SEED_AGENT_ISOLATION_001",
@@ -157,6 +175,168 @@
     },
     "severity": "MODERATE",
     "confidence": 0.65,
-    "fix_template": "建立共享命名约定文档，代码审查时检查一致性"
+    "fix_template": "建立共享命名约定文档，代码审查时检查一致性",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": []
+  },
+  {
+    "fingerprint_id": "UNI-ENV-001",
+    "category": "dotenv_committed",
+    "pattern_name": ".env File Committed",
+    "description": ".env file tracked by git containing secrets",
+    "abstract_signature": ".env in git index with API_KEY or DATABASE_URL",
+    "severity": "critical",
+    "confidence": 0.9,
+    "fix_template": "Add .env to .gitignore, use .env.example for templates",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "*"
+  },
+  {
+    "fingerprint_id": "UNI-LOCK-001",
+    "category": "lockfile_outdated",
+    "pattern_name": "Lockfile Out of Sync",
+    "description": "package-lock.json or Pipfile.lock not matching dependencies",
+    "abstract_signature": "package.json changed but package-lock.json not updated",
+    "severity": "medium",
+    "confidence": 0.72,
+    "fix_template": "Run npm install / pip install to regenerate lockfile",
+    "ai_blindspot": "context_lost",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "*"
+  },
+  {
+    "fingerprint_id": "UNI-DUP-001",
+    "category": "duplicate_dependency",
+    "pattern_name": "Duplicate Dependency",
+    "description": "Same package declared in multiple dependency sections",
+    "abstract_signature": "Package in both dependencies and devDependencies",
+    "severity": "low",
+    "confidence": 0.68,
+    "fix_template": "Consolidate to one section based on usage",
+    "ai_blindspot": "memory_trap",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "*"
+  },
+  {
+    "fingerprint_id": "UNI-UTF8-001",
+    "category": "utf8_encoding_issue",
+    "pattern_name": "File Encoding Not UTF-8",
+    "description": "Source file encoded in non-UTF-8 or with BOM",
+    "abstract_signature": "file -bi shows charset=iso-8859-1 or utf-8 with BOM",
+    "severity": "medium",
+    "confidence": 0.85,
+    "fix_template": "Convert to UTF-8 without BOM",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "*"
+  },
+  {
+    "fingerprint_id": "UNI-EOL-001",
+    "category": "mixed_line_endings",
+    "pattern_name": "Mixed Line Endings",
+    "description": "File contains both CRLF and LF line endings",
+    "abstract_signature": "git diff shows ^M characters",
+    "severity": "low",
+    "confidence": 0.8,
+    "fix_template": "Configure .gitattributes with * text=auto",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "*"
+  },
+  {
+    "fingerprint_id": "UNI-SIZE-001",
+    "category": "large_committed_file",
+    "pattern_name": "Large File Committed",
+    "description": "Binary or generated file >1MB committed to git",
+    "abstract_signature": "dist/bundle.js (2MB) in git history",
+    "severity": "medium",
+    "confidence": 0.75,
+    "fix_template": "Add to .gitignore or use Git LFS",
+    "ai_blindspot": "memory_trap",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "*"
+  },
+  {
+    "fingerprint_id": "UNI-PERM-001",
+    "category": "executable_source",
+    "pattern_name": "Source File with Executable Bit",
+    "description": "Python/JS source file with chmod +x without shebang",
+    "abstract_signature": "-rwxr-xr-x  config.py",
+    "severity": "low",
+    "confidence": 0.7,
+    "fix_template": "Remove execute permission: chmod -x",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "*"
+  },
+  {
+    "fingerprint_id": "UNI-SYMLINK-001",
+    "category": "symlink_outside_repo",
+    "pattern_name": "Symlink Pointing Outside Repo",
+    "description": "Symlink that references paths outside the repository",
+    "abstract_signature": "ln -s /etc/passwd ./config",
+    "severity": "high",
+    "confidence": 0.85,
+    "fix_template": "Use relative symlinks within the repo only",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "*"
+  },
+  {
+    "fingerprint_id": "UNI-GITIGNORE-001",
+    "category": "gitignore_missing_pattern",
+    "pattern_name": "Missing .gitignore Pattern",
+    "description": "Common generated files not in .gitignore",
+    "abstract_signature": "*.pyc, __pycache__, node_modules not in .gitignore",
+    "severity": "low",
+    "confidence": 0.82,
+    "fix_template": "Add standard ignore patterns for the project's language",
+    "ai_blindspot": "memory_trap",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "*"
+  },
+  {
+    "fingerprint_id": "UNI-CONFIG-001",
+    "category": "config_in_repo",
+    "pattern_name": "Environment-Specific Config in Repo",
+    "description": "Production config committed with dev defaults",
+    "abstract_signature": "config/production.yaml with real credentials",
+    "severity": "critical",
+    "confidence": 0.88,
+    "fix_template": "Use environment variables or encrypted secrets",
+    "ai_blindspot": "boundary_condition",
+    "verified_projects": [],
+    "cwes": [
+      "CWE-000"
+    ],
+    "language": "*"
   }
 ]
