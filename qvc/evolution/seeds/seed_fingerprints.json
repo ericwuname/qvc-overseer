@@ -1,0 +1,162 @@
+[
+  {
+    "fingerprint_id": "SEED_VAR_SCOPE_001",
+    "category": "VAR_SCOPE",
+    "pattern_name": "CROSS_FUNCTION_VARIABLE_REFERENCE",
+    "description": "函数A中引用了仅在函数B中定义的变量（跨函数复制粘贴导致变量污染）",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "code_template": "def func_a():\n    return $VAR  # $VAR only defined in func_b",
+      "trigger_condition": "同一文件中两个函数，变量在一个函数定义在另一个函数使用",
+      "example_trigger": "execute_single_task中使用sub_tasks，但sub_tasks仅在execute_group_task中定义",
+      "example_fix": "在func_a中声明变量或从func_b传入"
+    },
+    "severity": "FATAL",
+    "confidence": 0.95,
+    "fix_template": "检查变量是否应在当前函数内声明，或从调用方传入"
+  },
+  {
+    "fingerprint_id": "SEED_NULL_SAFETY_001",
+    "category": "NULL_SAFETY",
+    "pattern_name": "EXTERNAL_INPUT_WITHOUT_GUARD",
+    "description": "来自外部输入的对象（request参数、文件读取、API返回值）直接访问属性/下标，未做空值检查",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "code_template": "def handler($REQUEST):\n    $REQUEST.$ATTR  # no None check",
+      "trigger_condition": "函数参数直接访问属性/下标，无if is not None守卫",
+      "example_trigger": "request.files[0] 未检查request.files是否为None",
+      "example_fix": "if $REQUEST and $REQUEST.$ATTR:\n    ..."
+    },
+    "severity": "SEVERE",
+    "confidence": 0.90,
+    "fix_template": "在访问前添加: if $VAR is not None:"
+  },
+  {
+    "fingerprint_id": "SEED_API_MISMATCH_001",
+    "category": "API_MISMATCH",
+    "pattern_name": "FUNCTION_ARGUMENT_COUNT_MISMATCH",
+    "description": "函数调用时传入的参数数量与定义不一致（子Agent并行修改导致签名不同步）",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "code_template": "def func(a, b, c=1):\n...\nfunc(x)  # missing arg",
+      "trigger_condition": "同文件中函数定义与调用的必需参数数量不匹配",
+      "example_trigger": "track_event()需要2个参数但被传入4个参数",
+      "example_fix": "统一函数签名，或使用*args/**kwargs"
+    },
+    "severity": "FATAL",
+    "confidence": 0.90,
+    "fix_template": "检查函数定义，确保调用参数与签名一致"
+  },
+  {
+    "fingerprint_id": "SEED_IMPORT_001",
+    "category": "DEP_CHAIN",
+    "pattern_name": "MISSING_MODULE_IMPORT",
+    "description": "import语句引用了不存在或未导出的模块（子Agent各自修改导致导出不一致）",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "code_template": "from $MODULE import $FUNC  # $FUNC not in $MODULE",
+      "trigger_condition": "import的函数/类在目标模块中未定义或未导出",
+      "example_trigger": "from executor_service import execute_group_task（该函数未在__all__中导出）",
+      "example_fix": "确认模块中存在该函数，并检查__all__导出列表"
+    },
+    "severity": "FATAL",
+    "confidence": 0.85,
+    "fix_template": "检查目标模块的函数/类是否确实存在且已导出"
+  },
+  {
+    "fingerprint_id": "SEED_EXCEPTION_001",
+    "category": "INCOMPLETE",
+    "pattern_name": "BARE_EXCEPT_OR_SILENT_SWALLOW",
+    "description": "使用裸except或except块中仅pass/return空值，异常被静默吞没",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "code_template": "try:\n    ...\nexcept:\n    pass  # silently swallowed",
+      "trigger_condition": "except未指定类型或except块中只有pass/return None",
+      "example_trigger": "except: pass 导致所有异常被静默忽略",
+      "example_fix": "except SpecificError as e:\n    logger.exception(...)"
+    },
+    "severity": "SEVERE",
+    "confidence": 0.90,
+    "fix_template": "指定具体异常类型，至少记录日志"
+  },
+  {
+    "fingerprint_id": "SEED_ENCODING_001",
+    "category": "ENCODING",
+    "pattern_name": "UTF8_BOM_CONTAMINATION",
+    "description": "源文件包含UTF-8 BOM字符，导致JSON解析失败或构建工具报错",
+    "abstract_signature": {
+      "pattern_type": "byte_pattern",
+      "code_template": "\\xEF\\xBB\\xBF at file start",
+      "trigger_condition": "文件前3字节为UTF-8 BOM标记",
+      "example_trigger": "package.json头部包含U+FEFF导致Vite启动报错",
+      "example_fix": "使用Save as UTF-8 without BOM重新保存"
+    },
+    "severity": "SEVERE",
+    "confidence": 0.95,
+    "fix_template": "以UTF-8 without BOM格式重新保存文件"
+  },
+  {
+    "fingerprint_id": "SEED_FRAGILE_PARSE_001",
+    "category": "FRAGILE_PARSE",
+    "pattern_name": "REGEX_ON_UNSTRUCTURED_OUTPUT",
+    "description": "使用正则表达式解析AI生成的非结构化文本（Markdown/自然语言），格式变化即失效",
+    "abstract_signature": {
+      "pattern_type": "regex_pattern",
+      "code_template": "re.findall(r'$PATTERN', $AI_OUTPUT)",
+      "trigger_condition": "正则匹配Markdown/HTML/自然语言文本",
+      "example_trigger": "re.search(r'\\*\\*(\\w+)\\*\\*:\\s*(\\w+)', markdown_text)解析AI输出",
+      "example_fix": "改为JSON结构化数据传递，前端/后端统一格式"
+    },
+    "severity": "MODERATE",
+    "confidence": 0.75,
+    "fix_template": "使用结构化数据格式（JSON）替代文本解析"
+  },
+  {
+    "fingerprint_id": "SEED_STATE_SYNC_001",
+    "category": "STATE_SYNC",
+    "pattern_name": "STALE_CACHE_AFTER_MUTATION",
+    "description": "数据修改后前端未刷新/后端缓存未失效，用户看到过期数据",
+    "abstract_signature": {
+      "pattern_type": "semantic_pattern",
+      "code_template": "POST /api/update -> 200 OK\nGET /api/data -> old data",
+      "trigger_condition": "写操作后未触发读操作的缓存刷新",
+      "example_trigger": "审计修订提交后，审计页面仍显示旧数据",
+      "example_fix": "修订成功后调用invalidate查询或返回最新数据"
+    },
+    "severity": "SEVERE",
+    "confidence": 0.80,
+    "fix_template": "写操作后主动刷新相关缓存或返回最新数据"
+  },
+  {
+    "fingerprint_id": "SEED_DEAD_CODE_001",
+    "category": "DEAD_CODE",
+    "pattern_name": "COMMENTED_OUT_CODE",
+    "description": "被注释掉的代码块，可能是AI生成后手动禁用但忘记删除",
+    "abstract_signature": {
+      "pattern_type": "regex_pattern",
+      "code_template": "# def $FUNC(...):  or  # import $MODULE",
+      "trigger_condition": "注释行包含def/class/import/return等代码关键字",
+      "example_trigger": "# from executor_service import execute_group_task",
+      "example_fix": "删除注释掉的代码，或添加TODO说明保留原因"
+    },
+    "severity": "MINOR",
+    "confidence": 0.70,
+    "fix_template": "清理注释掉的代码或添加TODO标记"
+  },
+  {
+    "fingerprint_id": "SEED_AGENT_ISOLATION_001",
+    "category": "INCOMPLETE",
+    "pattern_name": "MULTI_AGENT_NAMING_INCONSISTENCY",
+    "description": "多个子Agent并行开发导致函数/变量命名不一致（同概念不同名，或同名不同概念）",
+    "abstract_signature": {
+      "pattern_type": "semantic_pattern",
+      "code_template": "file_a.py: track_task_event()\nfile_b.py: track_event()  # same concept, different name",
+      "trigger_condition": "跨文件存在语义相同但命名不同的函数/类",
+      "example_trigger": "一个文件用track_task_event，另一个用track_event表示同一功能",
+      "example_fix": "建立共享命名空间文档，统一函数/类命名"
+    },
+    "severity": "MODERATE",
+    "confidence": 0.65,
+    "fix_template": "建立共享命名约定文档，代码审查时检查一致性"
+  }
+]

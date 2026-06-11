@@ -1,0 +1,64 @@
+name: "QVC Code Review"
+description: "AI Agent blind spot detector — find bugs your AI missed"
+author: "QVC Project"
+
+inputs:
+  path:
+    description: "Path to scan"
+    required: false
+    default: "."
+  min_severity:
+    description: "Minimum severity (fatal/severe/moderate/minor)"
+    required: false
+    default: "severe"
+  fail_on_fatal:
+    description: "Fail workflow if fatal bugs found"
+    required: false
+    default: "true"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+
+    - name: Install QVC
+      shell: bash
+      run: pip install qvc-overseer
+
+    - name: Run QVC Scan
+      shell: bash
+      run: |
+        qvc scan ${{ inputs.path }} --full --min-severity ${{ inputs.min_severity }} --format markdown --format json
+        echo "QVC_SCAN_DONE=true" >> $GITHUB_ENV
+
+    - name: Post results as PR comment
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require("fs");
+          const report = fs.readFileSync("qvc-report.md", "utf8");
+          const summary = report.split("---")[0] || report.slice(0, 500);
+          await github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: "## QVC Code Review Results\n\n" + summary + "\n\n[Full report](qvc-report.md)"
+          });
+
+    - name: Check for fatal bugs
+      if: inputs.fail_on_fatal == 'true'
+      shell: bash
+      run: |
+        FATAL_COUNT=$(grep -c '"severity": "fatal"' qvc-report.json || echo 0)
+        if [ "$FATAL_COUNT" -gt 0 ]; then
+          echo "QVC found $FATAL_COUNT fatal bugs"
+          exit 1
+        fi
+
+branding:
+  icon: "shield"
+  color: "green"

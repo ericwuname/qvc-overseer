@@ -1,0 +1,212 @@
+[
+  {
+    "fingerprint_id": "SEED_PY_VAR_SCOPE_001",
+    "category": "VAR_SCOPE",
+    "pattern_name": "CROSS_FUNCTION_VARIABLE_REFERENCE",
+    "description": "函数A中引用了仅在函数B中定义的变量（跨函数复制粘贴导致变量污染）",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "同一文件中两个函数，变量在一个函数定义在另一个函数使用",
+      "example_trigger": "execute_single_task中使用sub_tasks，但sub_tasks仅在execute_group_task中定义",
+      "example_fix": "在func_a中声明变量或从func_b传入"
+    },
+    "severity": "FATAL", "confidence": 0.95,
+    "fix_template": "检查变量是否应在当前函数内声明，或从调用方传入"
+  },
+  {
+    "fingerprint_id": "SEED_PY_NULL_SAFETY_001",
+    "category": "NULL_SAFETY",
+    "pattern_name": "CHAINED_ACCESS_WITHOUT_GUARD",
+    "description": "dict.get()/.get() 返回值直接链式调用属性/下标，未检查None",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "函数参数直接访问属性/下标，无if is not None守卫",
+      "example_trigger": "request.files[0] 未检查request.files是否为None",
+      "example_fix": "if val is not None:\n    val.method()"
+    },
+    "severity": "SEVERE", "confidence": 0.90,
+    "fix_template": "在访问前添加: if $VAR is not None:"
+  },
+  {
+    "fingerprint_id": "SEED_PY_NULL_SAFETY_002",
+    "category": "NULL_SAFETY",
+    "pattern_name": "FUNCTION_PARAM_WITHOUT_NULL_CHECK",
+    "description": "函数参数可能为None，直接访问属性或调用方法",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "函数参数未做is None判断，直接访问.attr或调用.method()",
+      "example_trigger": "authorization.startswith('Bearer') 未先判空",
+      "example_fix": "if authorization and authorization.startswith('Bearer'):"
+    },
+    "severity": "SEVERE", "confidence": 0.85,
+    "fix_template": "assert $PARAM is not None 或 if $PARAM:"
+  },
+  {
+    "fingerprint_id": "SEED_PY_API_MISMATCH_001",
+    "category": "API_MISMATCH",
+    "pattern_name": "FUNCTION_ARGUMENT_COUNT_MISMATCH",
+    "description": "函数调用时传入参数数量与定义不一致",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "同文件中函数定义与调用的必需参数数量不匹配",
+      "example_trigger": "track_event()需要2个参数但被传入4个参数",
+      "example_fix": "统一函数签名，或使用*args/**kwargs"
+    },
+    "severity": "FATAL", "confidence": 0.90,
+    "fix_template": "检查函数定义，确保调用参数与签名一致"
+  },
+  {
+    "fingerprint_id": "SEED_PY_EXCEPTION_001",
+    "category": "ERR_HANDLING",
+    "pattern_name": "BARE_EXCEPT_OR_SILENT_SWALLOW",
+    "description": "使用裸except或except块中仅pass，异常被静默吞没",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "except未指定类型或except块中只有pass",
+      "example_trigger": "except: pass 导致所有异常被静默忽略",
+      "example_fix": "except SpecificError as e:\n    logger.exception(...)"
+    },
+    "severity": "SEVERE", "confidence": 0.90,
+    "fix_template": "指定具体异常类型，至少记录日志"
+  },
+  {
+    "fingerprint_id": "SEED_PY_EXCEPTION_002",
+    "category": "ERR_HANDLING",
+    "pattern_name": "EXCEPTION_CONVERTED_TO_EMPTY_RETURN",
+    "description": "except块中返回空值（None/[]/{}），调用方无法区分正常和异常",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "except块中return None/[]/{}",
+      "example_trigger": "except: return None 掩盖了真实的错误原因",
+      "example_fix": "记录异常日志，重新抛出或返回错误信息对象"
+    },
+    "severity": "MODERATE", "confidence": 0.75,
+    "fix_template": "记录异常日志，考虑重新抛出"
+  },
+  {
+    "fingerprint_id": "SEED_PY_IMPORT_001",
+    "category": "DEP_CHAIN",
+    "pattern_name": "MISSING_MODULE_OR_SYMBOL",
+    "description": "import语句引用了不存在的模块或符号",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "import的模块在sys.path或项目目录中不存在",
+      "example_trigger": "from executor_service import 不存在的函数",
+      "example_fix": "确认模块中存在该函数，检查__init__.py导出"
+    },
+    "severity": "FATAL", "confidence": 0.85,
+    "fix_template": "检查目标模块的函数/类是否确实存在且已导出"
+  },
+  {
+    "fingerprint_id": "SEED_PY_MUTABLE_DEFAULT_001",
+    "category": "STATE_SYNC",
+    "pattern_name": "MUTABLE_DEFAULT_ARGUMENT",
+    "description": "函数默认参数使用可变对象（[]/{}/set()），多次调用共享同一对象",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "def func(x=[]) 或 def func(x={})",
+      "example_trigger": "def add_item(item, items=[]): items.append(item)",
+      "example_fix": "def func(x=None):\n    if x is None: x = []"
+    },
+    "severity": "SEVERE", "confidence": 0.95,
+    "fix_template": "使用None作为默认值，函数内部初始化可变对象"
+  },
+  {
+    "fingerprint_id": "SEED_PY_CLOSURE_BINDING_001",
+    "category": "VAR_SCOPE",
+    "pattern_name": "LATE_BINDING_CLOSURE",
+    "description": "循环中创建的闭包（lambda/def）捕获了循环变量的最终值而非每次迭代的值",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "for循环中定义lambda或嵌套函数引用循环变量",
+      "example_trigger": "for i in range(3): funcs.append(lambda: i)",
+      "example_fix": "lambda i=i: i 或 functools.partial"
+    },
+    "severity": "SEVERE", "confidence": 0.80,
+    "fix_template": "使用默认参数绑定当前值: lambda x=$VAR: ..."
+  },
+  {
+    "fingerprint_id": "SEED_PY_IS_VS_EQ_001",
+    "category": "NULL_SAFETY",
+    "pattern_name": "IS_VS_EQUALS_CONFUSION",
+    "description": "使用 == 比较None/True/False而非 is，可能导致意外行为",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "使用 == 比较None、True、False",
+      "example_trigger": "if result == None: 而非 if result is None:",
+      "example_fix": "使用 is None / is not None"
+    },
+    "severity": "MINOR", "confidence": 0.70,
+    "fix_template": "使用 is 而非 == 比较单例对象"
+  },
+  {
+    "fingerprint_id": "SEED_PY_FSTRING_BRACE_001",
+    "category": "FRAGILE_PARSE",
+    "pattern_name": "FSTRING_WITH_JSON_BRACES",
+    "description": "f-string中包含JSON花括号，容易冲突或转义遗漏",
+    "abstract_signature": {
+      "pattern_type": "regex_pattern",
+      "trigger_condition": "f'...{...{{...}}...}' 多层花括号嵌套",
+      "example_trigger": "f'{{\"key\": {value}}}' 转义错误",
+      "example_fix": "使用json.dumps()代替手动拼JSON字符串"
+    },
+    "severity": "MINOR", "confidence": 0.65,
+    "fix_template": "使用json.dumps()或模板引擎"
+  },
+  {
+    "fingerprint_id": "SEED_PY_CONTEXT_MANAGER_001",
+    "category": "INCOMPLETE",
+    "pattern_name": "UNCLOSED_RESOURCE",
+    "description": "文件/连接/锁未在with语句中关闭，可能导致资源泄露",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "open()/.connect()/.acquire()未在with块中使用",
+      "example_trigger": "f = open('file.txt') 缺少f.close()或with语句",
+      "example_fix": "with open('file.txt') as f:\n    ..."
+    },
+    "severity": "MODERATE", "confidence": 0.75,
+    "fix_template": "使用with语句确保资源自动释放"
+  },
+  {
+    "fingerprint_id": "SEED_PY_ASYNCIO_001",
+    "category": "INCOMPLETE",
+    "pattern_name": "ASYNC_FUNCTION_NOT_AWAITED",
+    "description": "异步函数调用未使用await，返回协程对象而非实际结果",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "async def调用了另一个async函数但未用await",
+      "example_trigger": "result = async_func()  # 应await async_func()",
+      "example_fix": "添加await关键字"
+    },
+    "severity": "FATAL", "confidence": 0.90,
+    "fix_template": "在异步函数调用前添加await"
+  },
+  {
+    "fingerprint_id": "SEED_PY_SQL_INJECTION_001",
+    "category": "NULL_SAFETY",
+    "pattern_name": "STRING_FORMATTED_SQL",
+    "description": "使用字符串格式化/f-string拼接SQL查询，存在SQL注入风险",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "f'SELECT ... WHERE ... {user_input}' 或 '...'.format(user_input)",
+      "example_trigger": "cursor.execute(f'SELECT * FROM users WHERE id={uid}')",
+      "example_fix": "使用参数化查询: cursor.execute('... WHERE id=?', (uid,))"
+    },
+    "severity": "FATAL", "confidence": 0.90,
+    "fix_template": "使用参数化查询代替字符串拼接"
+  },
+  {
+    "fingerprint_id": "SEED_PY_HARDCODED_PATH_001",
+    "category": "DEAD_CODE",
+    "pattern_name": "HARDCODED_FILESYSTEM_PATH",
+    "description": "硬编码文件系统路径，跨平台/部署时失效",
+    "abstract_signature": {
+      "pattern_type": "ast_pattern",
+      "trigger_condition": "字符串包含绝对路径（C:\\ 或 /home/）",
+      "example_trigger": "open('C:\\\\Users\\\\admin\\\\config.json')",
+      "example_fix": "使用pathlib.Path和相对路径或环境变量"
+    },
+    "severity": "MODERATE", "confidence": 0.70,
+    "fix_template": "使用相对路径或配置/环境变量"
+  }
+]

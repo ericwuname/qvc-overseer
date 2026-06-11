@@ -1,0 +1,4 @@
+
+# QVC Protocol
+When user says "fix qvc" or "qvc tasks", read .qvc/tasks/pending.md and fix all issues.
+After fixing, report: what QVC found, what you fixed, which were blind spots.
