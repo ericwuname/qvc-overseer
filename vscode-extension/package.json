@@ -1,0 +1,72 @@
+{
+  "name": "qvc",
+  "displayName": "QVC - External Code Overseer",
+  "description": "AI Agent blind spot detector. Finds bugs your AI missed.",
+  "version": "0.6.0",
+  "publisher": "ericwuname",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Linters",
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:qvc.scan",
+    "onCommand:qvc.scanDiff"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "qvc.scan",
+        "title": "QVC: Full Scan"
+      },
+      {
+        "command": "qvc.scanDiff",
+        "title": "QVC: Scan Changed Files"
+      },
+      {
+        "command": "qvc.fixTasks",
+        "title": "QVC: Fix Tasks"
+      },
+      {
+        "command": "qvc.status",
+        "title": "QVC: Show Status"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "qvc.scan",
+          "group": "qvc",
+          "when": "explorerResourceIsFolder"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "qvc.scanDiff",
+          "group": "qvc"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "QVC",
+      "properties": {
+        "qvc.pythonPath": {
+          "type": "string",
+          "default": "python",
+          "description": "Path to Python executable"
+        },
+        "qvc.autoRunOnSave": {
+          "type": "boolean",
+          "default": false,
+          "description": "Run QVC scan on file save"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "package": "vsce package"
+  }
+}

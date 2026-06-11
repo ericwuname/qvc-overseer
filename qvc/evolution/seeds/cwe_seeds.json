@@ -1,0 +1,137 @@
+[
+  {
+    "fingerprint_id": "SEED_CWE_079_001",
+    "category": "NULL_SAFETY",
+    "pattern_name": "CWE_79_XSS_UNESCAPED_OUTPUT",
+    "description": "CWE-79: 用户输入直接渲染到HTML/DOM，未做转义（跨站脚本）",
+    "abstract_signature": {"pattern_type": "semantic_pattern", "trigger_condition": "innerHTML/__html/dangerouslySetInnerHTML使用未转义的用户输入", "example_trigger": "element.innerHTML = userInput", "example_fix": "使用textContent或DOMPurify.sanitize()"},
+    "severity": "FATAL", "confidence": 0.95,
+    "fix_template": "对用户输入做HTML转义或使用安全API"
+  },
+  {
+    "fingerprint_id": "SEED_CWE_089_001",
+    "category": "NULL_SAFETY",
+    "pattern_name": "CWE_89_SQL_INJECTION",
+    "description": "CWE-89: 字符串拼接构造SQL查询，存在SQL注入风险",
+    "abstract_signature": {"pattern_type": "ast_pattern", "trigger_condition": "f'SELECT...{var}'或'...'.format(var)拼接SQL", "example_trigger": "query = f'SELECT * FROM users WHERE name={name}'", "example_fix": "使用参数化查询或ORM"},
+    "severity": "FATAL", "confidence": 0.95,
+    "fix_template": "使用参数化查询: cursor.execute(sql, params)"
+  },
+  {
+    "fingerprint_id": "SEED_CWE_022_001",
+    "category": "NULL_SAFETY",
+    "pattern_name": "CWE_22_PATH_TRAVERSAL",
+    "description": "CWE-22: 用户输入拼接到文件路径未做验证，可访问任意文件",
+    "abstract_signature": {"pattern_type": "ast_pattern", "trigger_condition": "open(base_dir + user_path) 未做..过滤", "example_trigger": "open(f'/data/{filename}') filename=../../etc/passwd", "example_fix": "使用pathlib解析并验证在允许目录内"},
+    "severity": "FATAL", "confidence": 0.95,
+    "fix_template": "验证解析后的路径在允许的基目录内"
+  },
+  {
+    "fingerprint_id": "SEED_CWE_078_001",
+    "category": "NULL_SAFETY",
+    "pattern_name": "CWE_78_OS_COMMAND_INJECTION",
+    "description": "CWE-78: 用户输入拼接到shell命令中，存在命令注入风险",
+    "abstract_signature": {"pattern_type": "ast_pattern", "trigger_condition": "os.system()/subprocess.call(shell=True)使用用户输入", "example_trigger": "os.system(f'ping {host}') host='; rm -rf /'", "example_fix": "使用subprocess.run([cmd, arg])数组形式"},
+    "severity": "FATAL", "confidence": 0.95,
+    "fix_template": "使用数组形式的subprocess.run()避免shell注入"
+  },
+  {
+    "fingerprint_id": "SEED_CWE_200_001",
+    "category": "NULL_SAFETY",
+    "pattern_name": "CWE_200_SENSITIVE_INFO_IN_LOG",
+    "description": "CWE-200: 敏感信息（密码/token/密钥）出现在日志或错误消息中",
+    "abstract_signature": {"pattern_type": "semantic_pattern", "trigger_condition": "logger.info/print输出password/token/apikey变量", "example_trigger": "logger.info(f'Login: {username}, password={pw}')", "example_fix": "脱敏或红act敏感字段"},
+    "severity": "SEVERE", "confidence": 0.85,
+    "fix_template": "日志中脱敏处理敏感信息"
+  },
+  {
+    "fingerprint_id": "SEED_CWE_259_001",
+    "category": "NULL_SAFETY",
+    "pattern_name": "CWE_259_HARDCODED_PASSWORD",
+    "description": "CWE-259: 硬编码密码/密钥/Token在源代码中",
+    "abstract_signature": {"pattern_type": "regex_pattern", "trigger_condition": "变量名含password/secret/key/apikey且赋值为字符串常量", "example_trigger": "API_KEY = 'sk-abc123def456'", "example_fix": "使用环境变量或密钥管理服务"},
+    "severity": "FATAL", "confidence": 0.95,
+    "fix_template": "从环境变量或密钥管理服务读取"
+  },
+  {
+    "fingerprint_id": "SEED_CWE_327_001",
+    "category": "NULL_SAFETY",
+    "pattern_name": "CWE_327_WEAK_CRYPTO",
+    "description": "CWE-327: 使用弱加密算法（MD5/SHA1/DES）",
+    "abstract_signature": {"pattern_type": "ast_pattern", "trigger_condition": "hashlib.md5()/sha1() 或 cryptography DES", "example_trigger": "hashlib.md5(password.encode()).hexdigest()", "example_fix": "使用bcrypt/scrypt/argon2"},
+    "severity": "SEVERE", "confidence": 0.85,
+    "fix_template": "使用安全的哈希算法（SHA-256+/bcrypt/argon2）"
+  },
+  {
+    "fingerprint_id": "SEED_CWE_352_001",
+    "category": "STATE_SYNC",
+    "pattern_name": "CWE_352_MISSING_CSRF_TOKEN",
+    "description": "CWE-352: 状态变更请求缺少CSRF保护",
+    "abstract_signature": {"pattern_type": "semantic_pattern", "trigger_condition": "POST/PUT/DELETE路由未使用CSRF中间件", "example_trigger": "@app.post('/api/delete') 无CSRF检查", "example_fix": "添加CSRF token验证"},
+    "severity": "SEVERE", "confidence": 0.80,
+    "fix_template": "添加CSRF中间件保护状态变更端点"
+  },
+  {
+    "fingerprint_id": "SEED_CWE_400_001",
+    "category": "NULL_SAFETY",
+    "pattern_name": "CWE_400_UNBOUNDED_RESOURCE",
+    "description": "CWE-400: 无限制的资源消耗（无超时/无大小限制）",
+    "abstract_signature": {"pattern_type": "semantic_pattern", "trigger_condition": "requests.get()无timeout参数 / 文件上传无大小限制", "example_trigger": "requests.post(url, data=large_file, timeout=None)", "example_fix": "设置合理超时和大小限制"},
+    "severity": "SEVERE", "confidence": 0.80,
+    "fix_template": "设置超时和资源限制"
+  },
+  {
+    "fingerprint_id": "SEED_CWE_502_001",
+    "category": "NULL_SAFETY",
+    "pattern_name": "CWE_502_DESERIALIZATION_UNTRUSTED",
+    "description": "CWE-502: 反序列化不可信数据（pickle/yaml.load），可导致RCE",
+    "abstract_signature": {"pattern_type": "ast_pattern", "trigger_condition": "pickle.loads()/yaml.load()处理用户输入", "example_trigger": "pickle.loads(request.data)", "example_fix": "使用yaml.safe_load()或JSON"},
+    "severity": "FATAL", "confidence": 0.95,
+    "fix_template": "使用安全的序列化格式（JSON）或yaml.safe_load()"
+  },
+  {
+    "fingerprint_id": "SEED_CWE_601_001",
+    "category": "NULL_SAFETY",
+    "pattern_name": "CWE_601_OPEN_REDIRECT",
+    "description": "CWE-601: 未验证的重定向URL，可被用于钓鱼攻击",
+    "abstract_signature": {"pattern_type": "semantic_pattern", "trigger_condition": "redirect(url)中url来自用户输入且未验证域名", "example_trigger": "redirect(request.args.get('next'))", "example_fix": "验证URL为同域或白名单域名"},
+    "severity": "SEVERE", "confidence": 0.85,
+    "fix_template": "验证重定向目标URL的安全性"
+  },
+  {
+    "fingerprint_id": "SEED_CWE_798_001",
+    "category": "NULL_SAFETY",
+    "pattern_name": "CWE_798_HARDCODED_CREDENTIALS",
+    "description": "CWE-798: 硬编码凭证（数据库密码/JWT密钥等）",
+    "abstract_signature": {"pattern_type": "regex_pattern", "trigger_condition": "DB_PASSWORD/JWT_SECRET等变量赋值为明文字符串", "example_trigger": "JWT_SECRET = 'my-secret-key-123'", "example_fix": "从环境变量读取"},
+    "severity": "FATAL", "confidence": 0.95,
+    "fix_template": "所有凭证从环境变量/密钥管理服务读取"
+  },
+  {
+    "fingerprint_id": "SEED_CWE_918_001",
+    "category": "NULL_SAFETY",
+    "pattern_name": "CWE_918_SSRF",
+    "description": "CWE-918: 服务端请求伪造，用户可控的URL被服务端直接请求",
+    "abstract_signature": {"pattern_type": "semantic_pattern", "trigger_condition": "requests.get(url)中url来自用户输入且未过滤内网IP", "example_trigger": "requests.get(user_provided_url) 可访问http://169.254.169.254/", "example_fix": "白名单域名，过滤内网IP"},
+    "severity": "FATAL", "confidence": 0.90,
+    "fix_template": "验证请求目标为允许的外部域名"
+  },
+  {
+    "fingerprint_id": "SEED_CWE_1004_001",
+    "category": "STATE_SYNC",
+    "pattern_name": "CWE_1004_MISSING_COOKIE_SECURE",
+    "description": "CWE-1004: Cookie缺少Secure/HttpOnly/SameSite属性",
+    "abstract_signature": {"pattern_type": "semantic_pattern", "trigger_condition": "set_cookie()未设置secure=True, httponly=True, samesite", "example_trigger": "response.set_cookie('session', token) 无安全属性", "example_fix": "添加secure=True, httponly=True, samesite='Lax'"},
+    "severity": "SEVERE", "confidence": 0.85,
+    "fix_template": "Cookie设置secure/httponly/samesite属性"
+  },
+  {
+    "fingerprint_id": "SEED_CWE_1333_001",
+    "category": "FRAGILE_PARSE",
+    "pattern_name": "CWE_1333_REDOS_REGEX",
+    "description": "CWE-1333: 正则表达式存在ReDoS风险（指数级回溯）",
+    "abstract_signature": {"pattern_type": "regex_pattern", "trigger_condition": "正则包含(a+)+/(a|aa)+/.*(.+)+等嵌套量词模式", "example_trigger": "re.match(r'(a+)+b', user_input)", "example_fix": "重写正则消除嵌套量词或使用原子组"},
+    "severity": "SEVERE", "confidence": 0.80,
+    "fix_template": "简化正则，避免嵌套量词"
+  }
+]
