@@ -1,4 +1,4 @@
-"""静态分析器 V2 —— 修复语言过滤"""
+"""Static analyzer V8 — with Python AST semantic context"""
 
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -8,9 +8,20 @@ from qvc.rules.base import BaseRule
 
 
 class StaticAnalyzer:
-    def __init__(self, registry: RuleRegistry, max_workers: int = 4):
+    def __init__(self, registry: RuleRegistry, max_workers: int = 4, use_ast: bool = True):
         self.registry = registry
         self.max_workers = max_workers
+        self.use_ast = use_ast
+        self._ast_analyzer = None  # Lazy init
+
+    def _get_ast_analyzer(self):
+        if self._ast_analyzer is None and self.use_ast:
+            try:
+                from qvc.analyzers.ast_analyzer import ASTAnalyzer
+                self._ast_analyzer = ASTAnalyzer()
+            except ImportError:
+                self._ast_analyzer = None
+        return self._ast_analyzer
 
     def analyze_file(
         self,
@@ -25,7 +36,6 @@ class StaticAnalyzer:
                 if "*" in r.languages and r not in rules
             ]
         else:
-            # 即使外部传入了 rules，也按语言过滤
             rules = [r for r in rules if r.supports_language(language)]
 
         if not rules:
@@ -37,17 +47,27 @@ class StaticAnalyzer:
             return []
 
         ast_tree = None
+        ast_context = None
         if language == "python":
             try:
                 import ast
                 ast_tree = ast.parse(source)
+                # V8: Build AST semantic context for better rule accuracy
+                analyzer = self._get_ast_analyzer()
+                if analyzer:
+                    ast_context = analyzer.analyze(file_path, source)
             except SyntaxError:
                 pass
 
         bugs = []
         for rule in rules:
             try:
-                rule_bugs = rule.analyze(file_path, source, ast_tree)
+                # V8: Pass ast_context to rules that accept it
+                try:
+                    rule_bugs = rule.analyze(file_path, source, ast_tree, ast_context=ast_context)
+                except TypeError:
+                    # Fallback for rules that don't accept ast_context
+                    rule_bugs = rule.analyze(file_path, source, ast_tree)
                 bugs.extend(rule_bugs)
             except Exception:  # intentional: one bad rule must not crash the scan
                 pass

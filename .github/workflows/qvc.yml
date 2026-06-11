@@ -9,6 +9,9 @@ on:
 jobs:
   qvc-review:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
 
@@ -20,13 +23,39 @@ jobs:
       - name: Install QVC
         run: pip install qvc-overseer
 
-      - name: Run QVC
-        run: python -m qvc.cli scan . --min-severity fatal
+      - name: Run QVC Scan
+        id: scan
+        run: |
+          python -m qvc.cli scan . --full --min-severity fatal --format json --output qvc-report.json
+          echo "scan_done=true" >> $GITHUB_ENV
         continue-on-error: true
+
+      - name: Generate Fix Suggestion PR
+        id: pr
+        if: env.scan_done == 'true'
+        env:
+          QVC_SCAN_RESULT: qvc-report.json
+          QVC_MIN_CONFIDENCE: "0.90"
+        run: |
+          python -m qvc.task_pool.auto_pr || echo "PR_GEN_SKIPPED=true" >> $GITHUB_ENV
+
+      - name: Create Pull Request
+        if: env.PR_GEN_SKIPPED != 'true' && github.event_name == 'push'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: "[QVC] Add external review findings"
+          title: "$(cat qvc-pr-title.txt)"
+          body-path: qvc-pr-body.md
+          branch: qvc/fix-suggestions
+          base: ${{ github.ref_name }}
+          labels: qvc-review
+          delete-branch: true
 
       - name: Upload Report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: qvc-report
-          path: qvc-report.md
+          path: |
+            qvc-report.md
+            qvc-report.json

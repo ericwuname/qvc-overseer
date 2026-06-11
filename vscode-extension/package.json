@@ -2,7 +2,7 @@
   "name": "qvc",
   "displayName": "QVC - External Code Overseer",
   "description": "AI Agent blind spot detector. Finds bugs your AI missed.",
-  "version": "0.6.0",
+  "version": "1.0.0",
   "publisher": "ericwuname",
   "engines": {
     "vscode": "^1.80.0"
@@ -68,5 +68,20 @@
   },
   "scripts": {
     "package": "vsce package"
-  }
+  },
+  "repository": "https://github.com/ericwuname/qvc-overseer",
+  "icon": "icon.png",
+  "galleryBanner": {
+    "color": "#1a1a2e",
+    "theme": "dark"
+  },
+  "keywords": [
+    "qvc",
+    "code-review",
+    "ai-agent",
+    "static-analysis",
+    "bug-detection",
+    "external-overseer"
+  ],
+  "license": "MIT"
 }

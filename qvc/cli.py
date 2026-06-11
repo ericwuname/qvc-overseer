@@ -107,6 +107,7 @@ def _register_builtin_rules():
     from qvc.rules.typescript.type_safety import TSTypeSafetyRule
     from qvc.rules.go.nil_safety import GoNilSafetyRule
     from qvc.rules.python.sql_injection import SQLInjectionRule
+    from qvc.rules.python.django_sql_injection import DjangoSQLInjectionRule
     from qvc.rules.python.mutable_defaults import MutableDefaultsRule
     from qvc.rules.python.resource_leak import ResourceLeakRule
     from qvc.rules.python.unsafe_pickle import UnsafePickleRule
@@ -147,7 +148,7 @@ def _register_builtin_rules():
             JSMemoryLeakRule(), ReactStateImmutableRule(), TSTypeSafetyRule(),
             GoNilSafetyRule(),
             PythonAPIDriftRule(), PythonStaleReferenceRule(),
-            SQLInjectionRule(), MutableDefaultsRule(),
+            SQLInjectionRule(), DjangoSQLInjectionRule(), MutableDefaultsRule(),
             ResourceLeakRule(), UnsafePickleRule(),
             AssertForLogicRule(), HTTPNoTimeoutRule(),
             EvalUsageRule(), DOMXSSRule(),

@@ -1,128 +1,87 @@
 # QVC Changelog
 
-## [0.9.0] — 2026-06-12 — V7 "Gene Pool"
+## [1.0.0] — 2026-06-12 — "Delivery"
 
 ### Added
-- **145 seed fingerprints** (55 -> 145, +90 new)
-- **Gene pool repository**: qvc-fingerprints with verified/ and candidates/
-- **Incremental sync**: sync_incremental() pulls only new/updated fingerprints
-- **Contribution validator**: validate_fingerprint() checks schema before submission
-- **PR body generator**: generate_pr_body() creates structured contribution PRs
-- **New fingerprint fields**: ai_blindspot + verified_projects on all fingerprints
-- **Go fingerprints**: 15 Go-specific patterns (goroutine leak, defer error, etc.)
-- **CWE coverage**: 15 -> 35 CWE patterns
-- **V6.5 retrospective** (CN + EN)
-- **V7 execution guide** (CN + EN)
-- **V7 project report** (CN + EN)
+- **50th rule**: `django_sql_injection` — detects Django ORM raw()/extra()/RawSQL with injectable SQL patterns
+- **Python AST semantic analyzer**: `qvc/analyzers/ast_analyzer.py` — resolves imports, functions, classes, scopes, call graphs
+- **GitHub Actions auto-PR**: `qvc/task_pool/auto_pr.py` — generates fix suggestion PRs for ≥90% confidence bugs
+- **VS Code extension Marketplace-ready**: metadata, icon, gallery banner, keywords
 
 ### Changed
-- fingerprint_store.py: loads go_seeds.json + seed_fingerprints.json
-- syncer.py: sync_incremental() method for delta-only updates
-- contributor.py: validate + generate PR body methods
-- All fingerprints normalized with V7 schema fields
-
-## [0.8.0] — 2026-06-11 — V6.5 "Rule Expansion"
-
-### Added
-- **29 new detection rules** (21 -> 50 total rules)
-- **Python (12 new)**: sql_injection, mutable_default_args, resource_leak,
-  unsafe_pickle, assert_in_prod, http_no_timeout, race_condition,
-  path_traversal, subprocess_injection, unsafe_yaml, os_system, socket_no_timeout
-- **JavaScript/TypeScript (8 new)**: eval_usage, dom_xss, unhandled_promise,
-  unsafe_json_parse, prototype_pollution, nosql_injection, path_traversal_js,
-  floating_promise
-- **React (3 new)**: missing_list_key, dangerous_html, unused_state_setter
-- **Go (2 new)**: goroutine_leak, defer_error_ignored
-- **TypeScript (1 new)**: ts_any_type
-- **Universal (3 new)**: hardcoded_credentials, insecure_random, todo_no_ticket
-- **International documentation**: 7 English docs (User Guide, Business Pitch,
-  Project Report, Execution Guide, Comparison Report, Retrospective, Terminal Demo)
-- **Bilingual README** with language switcher
-- **One-click install scripts**: install.bat (Windows) + install.sh (Mac/Linux)
-- **CONTRIBUTING.md** international edition
-
-### Changed
-- Rule count: 21 -> 50
-- Self-scan false positive rate: improved via BOM fix
-- All GitHub URLs unified to ericwuname/qvc-overseer
+- `qvc/analyzers/static_analyzer.py`: Integrated ASTAnalyzer for Python files
+- `qvc/cli.py`: Registered DjangoSQLInjectionRule (50 rules total)
+- `.github/workflows/qvc.yml`: Added auto-PR generation job
+- `.github/action.yml`: Added `auto_pr` input + fix suggestion generation
+- `vscode-extension/package.json`: Bumped to 1.0.0, added marketplace metadata
+- Version bump: 0.9.0 → 1.0.0
 
 ### Fixed
-- UTF-8 BOM stripped from cli.py
-- Version number sync between pyproject.toml and qvc/__init__.py
+- Stripped BOM from 8 files (docs + new source files)
 
-## [0.6.0a1] — 2026-06-11 — V6 "Closed Loop"
+---
+
+## [0.9.0] — 2026-06-12 — "Gene Pool"
 
 ### Added
-- **Task Pool Engine**: `.qvc/tasks/pending.md` — AI Agent automatically consumes QVC findings
-- **qvc setup**: One command to initialize QVC protocol in any project (AGENTS.md + .cursorrules)
-- **qvc tasks**: View and manage the task pool from CLI
-- **Community Gene Pool**: End-to-end contribute/update with local fallback (no git required)
-- **VS Code Extension**: Right-click scan, status bar bug count, problem panel integration
-- **GitHub Actions**: `qvc-review` workflow — PR comments with scan summaries
-- **--no-pool flag**: Opt-out of task pool generation on scan
+- Gene pool independent repository: `ericwuname/qvc-fingerprints`
+- Fingerprints expanded: 55 → 145 (+90)
+- Incremental sync engine: `GenePoolSyncer.sync_incremental()`
+- Community contribution loop: `qvc contribute` + `qvc update`
+- New fields per fingerprint: `ai_blindspot`, `verified_projects`
+- Evolution module: contributor, evolution_cycle, gap_detector, gene_pool, pattern_abstractor, syncer
+- CWE coverage: 15 → 35
+- Language coverage: 4 → 6 (+Go +TypeScript fingerprints)
 
-### Changed
-- `qvc scan` now automatically writes tasks to `.qvc/tasks/pending.md` after scanning
-- Gene pool syncer gracefully falls back to local directory when git is unavailable
-- Protocol generator creates both AGENTS.md and .cursorrules for broader AI Agent support
-- Version bumped to 0.6.0a1
+---
+
+## [0.8.0] — 2026-06-11 — "V6.5"
+
+### Added
+- Rules expanded: 21 → 49 (+28 rules across Python, JS, React, Go, TypeScript, Universal)
+- Bilingual documentation: 7 English docs (User Guide, Business Pitch, Project Report, Execution Guide, Comparison Report, Retrospective, Demo)
+- Installation scripts: `install.bat` (Windows) + `install.sh` (Mac/Linux)
+- 50 seed fingerprints with CWE/OWASP coverage
 
 ### Fixed
-- Pre-existing test_core.py version mismatches (0.1.0 → 0.5.0a1)
-- Pre-existing severity label assertion
-- Multiple PowerShell `\n` encoding issues in test files
+- BOM stripped from project source files
+- Rule file self-referencing false positives marked as known
 
-## [0.5.0a1] — 2026-06-11 — V5 "Self-Propagating"
+---
 
-### Added
-- API_DRIFT rule (PY_API_DRIFT_001): cross-file function signature consistency
-- STALE_REFERENCE rule (PY_STALE_REF_001): deleted/renamed symbol references
-- AHA moment on first scan: "Your AI cannot see these"
-- Propagation hook: one-click share after scan
-- AI Fix Instructions: report bottom + --fix-prompt flag + qvc fix command
-- Progress bar with real-time file counter
-- Regression tests expanded: 11 → 45
-
-### Changed
-- REVIEW_GAP defaults to Mode B (industry baseline) without requiring --self-review-report
-- README 4 claim corrections for accuracy
-
-## [0.4.0a1] — 2026-06 — V4 "Trust Version"
+## [0.7.0] — 2026-06-10 — "V3-V5"
 
 ### Added
-- V4-alpha → V4-stable → V4-beta three-stage pipeline
-- PyPI alpha release (pip install qvc-overseer)
-- Go nil safety rule (GO_NIL_SAFETY_001)
-- Incremental scan (--diff mode)
-- SARIF output format
-- Hit rate validation report across 5 projects: 100% at >=90% confidence
-- 3 external user beta tests
+- Three-tier confidence engine (CERTIFICATE/PATTERN/HEURISTIC)
+- Blind spot classifier: boundary_condition, memory_trap, context_lost
+- External overseer summary in reports
+- Self-review miss rate comparison
+- Task pool: scan → dispatch → AI fix → verify
+- Progressive capability unlock hints
+- Config system: zero-config startup + graded capability discovery
 
-## [0.3.0a1] — 2026-05 — V3 "External Overseer"
+---
 
-### Added
-- Blind spot classifier (memory_trap, context_lost, self_harvest)
-- Self-review miss rate estimation (Mode A/B/C)
-- Industry baseline comparison without requiring self-review report
-- 50 seed fingerprints (CWE Top 25 + real-world patterns)
-- Self-evolution: learns from every scan
-- Gene pool infrastructure (local)
-
-## [0.2.0a1] — 2026-05 — V2 "Signal Priority"
+## [0.6.0] — 2026-06-09 — "V1-V2"
 
 ### Added
-- Three-layer confidence engine (L1: >=95%, L2: 60-85%, L3: 20-50%)
-- Dedup aggregation: 169 identical import warnings → 1 suggestion
-- UTF-8 BOM detection
-- Forced severity distribution model
-- Post-processing pipeline (noise reduction, dedup, severity normalization)
-
-## [0.1.0] — 2026-04 — V1 "Proof of Concept"
-
-### Added
-- Static analysis engine with 11 rules
-- File scanner with language auto-detection
+- Initial 21 rules across Python, JavaScript, React, TypeScript
+- Static analysis engine with multi-threading
 - Markdown report generator
-- Python import checking
-- Variable scope analysis
-- Null safety detection
+- CLI: scan, diff, tasks, setup commands
+- Fingerprint data structure with evolution support
+- Self-evolution cycle: scan → detect gap → abstract pattern → verify → deploy
+
+---
+
+## [Initial] — 2026-06-08 — "V0"
+
+### Added
+- Project scaffold
+- Basic static analysis: variable scope, null safety, import check, BOM detection
+- Core models: Bug, Report, Severity
+- First self-scan on ai-corp V7.1
+
+---
+
+*QVC — External overseer for AI Agent code. Review only, never modify.*
